@@ -1,5 +1,9 @@
 const { createServer } = require("http");
 const { Server } = require("socket.io");
+const DatabaseManager = require("./database");
+
+// Initialize database
+const db = new DatabaseManager();
 
 // Simple UUID generator to avoid ES module issues
 function generateId() {
@@ -20,6 +24,43 @@ let userSockets = new Map(); // userId -> socketId
 
 io.on("connection", (socket) => {
   console.log("User connected:", socket.id);
+
+  // Handle user registration
+  socket.on("register", async (userData) => {
+    try {
+      const user = await db.registerUser(userData);
+      socket.emit("register-success", user);
+      console.log("User registered:", user.username);
+    } catch (error) {
+      socket.emit("register-error", { message: error.message });
+      console.log("Registration failed:", error.message);
+    }
+  });
+
+  // Handle user login
+  socket.on("login", async (credentials) => {
+    try {
+      const user = await db.loginUser(
+        credentials.username,
+        credentials.password
+      );
+      socket.emit("login-success", user);
+      console.log("User logged in:", user.username);
+    } catch (error) {
+      socket.emit("login-error", { message: error.message });
+      console.log("Login failed:", error.message);
+    }
+  });
+
+  // Debug: Get all users
+  socket.on("debug-get-users", async () => {
+    try {
+      const users = await db.getAllUsers();
+      socket.emit("debug-users", users);
+    } catch (error) {
+      console.error("Error getting users:", error);
+    }
+  });
 
   // Handle user joining queue
   socket.on("join-queue", (userData) => {
