@@ -9,6 +9,65 @@ import { User, AuthData } from "./types/auth";
 import { useAuth } from "./hooks/useAuth";
 import { SocketProvider } from "./contexts/SocketContext";
 
+// Zodiac signs array for random selection
+const zodiacSigns = [
+  "Aries",
+  "Taurus",
+  "Gemini",
+  "Cancer",
+  "Leo",
+  "Virgo",
+  "Libra",
+  "Scorpio",
+  "Sagittarius",
+  "Capricorn",
+  "Aquarius",
+  "Pisces",
+];
+
+// Function to generate random zodiac chart for guests
+const generateRandomZodiacChart = () => {
+  const getRandomSign = () =>
+    zodiacSigns[Math.floor(Math.random() * zodiacSigns.length)];
+
+  return {
+    sun: getRandomSign(),
+    moon: getRandomSign(),
+    rising: getRandomSign(),
+    birthInfo: {
+      date: "1990-01-01", // Default date for guests
+      time: "12:00", // Default time for guests
+      location: "New York, NY", // Default location for guests
+    },
+  };
+};
+
+// Function to generate random guest username
+const generateGuestUsername = () => {
+  const cosmicNames = [
+    "StarSeeker",
+    "MoonDancer",
+    "SunRider",
+    "CosmicWanderer",
+    "NightSky",
+    "StarGazer",
+    "CelestialSoul",
+    "MysticTraveler",
+    "AstralSeeker",
+    "LunarDreamer",
+    "SolarSpirit",
+    "GalacticExplorer",
+    "CosmicSage",
+    "StellarGuide",
+    "NebulaWalker",
+  ];
+
+  const randomName =
+    cosmicNames[Math.floor(Math.random() * cosmicNames.length)];
+  const randomNum = Math.floor(Math.random() * 1000);
+  return `${randomName}_${randomNum}`;
+};
+
 export default function Home() {
   const [active, setActive] = useState("zodiac");
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -38,15 +97,11 @@ export default function Home() {
 
   const handleAuth = (authData: AuthData) => {
     if (authData.isGuest) {
-      // Handle guest login - create a temporary user
-      const guestZodiacChart = calculateFullChart(
-        authData.birthDate!,
-        authData.birthTime!,
-        authData.birthLocation!
-      );
+      // Handle guest login - create a temporary user with random zodiac signs
+      const guestZodiacChart = generateRandomZodiacChart();
 
       const guestUser = {
-        username: `Guest_${Date.now()}`,
+        username: generateGuestUsername(),
         password: "",
         zodiacChart: guestZodiacChart,
         createdAt: new Date().toISOString(),
