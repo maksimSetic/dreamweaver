@@ -6,6 +6,7 @@ export const useAuth = () => {
   const [isConnected, setIsConnected] = useState(false);
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
 
   useEffect(() => {
     // Initialize socket connection for authentication
@@ -27,7 +28,10 @@ export const useAuth = () => {
       setUser(userData);
       setIsLoading(false);
       // Store user in localStorage for session persistence
-      localStorage.setItem("dreamweaver_user", JSON.stringify(userData));
+      if (rememberMe) {
+        localStorage.setItem("dreamweaver_user", JSON.stringify(userData));
+        localStorage.setItem("dreamweaver_remember", "true");
+      }
     });
 
     socketInstance.on("register-error", (error) => {
@@ -41,8 +45,11 @@ export const useAuth = () => {
       console.log("Login successful:", userData);
       setUser(userData);
       setIsLoading(false);
-      // Store user in localStorage for session persistence
-      localStorage.setItem("dreamweaver_user", JSON.stringify(userData));
+      // Store user in localStorage for session persistence only if remember me is checked
+      if (rememberMe) {
+        localStorage.setItem("dreamweaver_user", JSON.stringify(userData));
+        localStorage.setItem("dreamweaver_remember", "true");
+      }
     });
 
     socketInstance.on("login-error", (error) => {
@@ -58,21 +65,25 @@ export const useAuth = () => {
 
     setSocket(socketInstance);
 
-    // Load user from localStorage on mount (for session persistence)
+    // Load user from localStorage on mount only if remember me was enabled
     const savedUser = localStorage.getItem("dreamweaver_user");
-    if (savedUser) {
+    const rememberFlag = localStorage.getItem("dreamweaver_remember");
+
+    if (savedUser && rememberFlag === "true") {
       try {
         setUser(JSON.parse(savedUser));
+        setRememberMe(true);
       } catch (error) {
         console.error("Error parsing saved user:", error);
         localStorage.removeItem("dreamweaver_user");
+        localStorage.removeItem("dreamweaver_remember");
       }
     }
 
     return () => {
       socketInstance.disconnect();
     };
-  }, []);
+  }, []); // Remove rememberMe dependency to avoid infinite loop
 
   const register = (userData) => {
     if (!socket || !isConnected) {
@@ -84,19 +95,22 @@ export const useAuth = () => {
     socket.emit("register", userData);
   };
 
-  const login = (username, password) => {
+  const login = (username, password, remember = false) => {
     if (!socket || !isConnected) {
       alert("Not connected to server. Please try again.");
       return;
     }
 
+    setRememberMe(remember);
     setIsLoading(true);
     socket.emit("login", { username, password });
   };
 
   const logout = () => {
     setUser(null);
+    setRememberMe(false);
     localStorage.removeItem("dreamweaver_user");
+    localStorage.removeItem("dreamweaver_remember");
   };
 
   const debugGetUsers = () => {
@@ -107,8 +121,11 @@ export const useAuth = () => {
 
   return {
     user,
+    setUser,
     isConnected,
     isLoading,
+    rememberMe,
+    setRememberMe,
     register,
     login,
     logout,

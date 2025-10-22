@@ -8,6 +8,7 @@ const AuthForm: React.FC<AuthFormProps> = ({
   existingUser,
 }) => {
   const [isLogin, setIsLogin] = useState(!!existingUser);
+  const [rememberMe, setRememberMe] = useState(false);
   const [formData, setFormData] = useState({
     username: "",
     password: "",
@@ -74,6 +75,7 @@ const AuthForm: React.FC<AuthFormProps> = ({
       username: formData.username,
       password: formData.password,
       isLogin,
+      rememberMe,
       birthDate: formData.birthDate,
       birthTime: formData.birthTime,
       birthLocation: formData.birthLocation,
@@ -236,12 +238,52 @@ const AuthForm: React.FC<AuthFormProps> = ({
             </motion.div>
           )}
 
+          {/* Remember Me Checkbox (only for login) */}
+          {isLogin && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="flex items-center space-x-2"
+            >
+              <input
+                type="checkbox"
+                id="rememberMe"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                className="w-4 h-4 text-purple-600 bg-gray-800 border-gray-600 rounded focus:ring-purple-500"
+              />
+              <label htmlFor="rememberMe" className="text-sm text-gray-300">
+                Remember me
+              </label>
+            </motion.div>
+          )}
+
           {/* Submit Button */}
           <button
             type="submit"
             className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 px-6 rounded-lg font-semibold hover:from-purple-700 hover:to-pink-700 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all duration-300 mt-6"
           >
             {isLogin ? "Sign In" : "Create Account"}
+          </button>
+
+          {/* Guest Login Button */}
+          <button
+            type="button"
+            onClick={() => {
+              onAuth({
+                username: "Guest",
+                password: "",
+                isLogin: false,
+                isGuest: true,
+                birthDate: "1990-01-01",
+                birthTime: "12:00",
+                birthLocation: "New York, NY",
+              });
+            }}
+            className="w-full bg-gradient-to-r from-gray-600 to-gray-700 text-white py-3 px-6 rounded-lg font-semibold hover:from-gray-700 hover:to-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-500 transition-all duration-300 mt-3"
+          >
+            Continue as Guest
           </button>
         </form>
 

@@ -1,9 +1,10 @@
 const SIDEBAR_ITEMS = [
+  { id: "chat", label: "Chat" },
   { id: "zodiac", label: "Zodiac Compatibility" },
-  { id: "storyteller", label: "User Profile" },
-  { id: "dreammaker", label: "Dreammaker" },
   { id: "notes", label: "Notes" },
+  { id: "dreammaker", label: "Dreammaker" },
   { id: "cardgame", label: "Mystic Elements" },
+  { id: "storyteller", label: "Profile" },
 ];
 
 export default function Sidebar({
@@ -63,7 +64,7 @@ export default function Sidebar({
                     : "hover:bg-indigo-600 hover:shadow-md"
                 }`}
             >
-              {item.id === "storyteller" && user ? "Your Profile" : item.label}
+              {item.label}
             </button>
           ))}
         </nav>
@@ -156,9 +157,7 @@ export default function Sidebar({
                       : "hover:bg-indigo-600 hover:shadow-md"
                   }`}
               >
-                {item.id === "storyteller" && user
-                  ? "Your Profile"
-                  : item.label}
+                {item.id === "storyteller" && user ? "Profile" : item.label}
               </button>
             ))}
 

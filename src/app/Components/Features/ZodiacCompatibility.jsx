@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useSocket } from "../../hooks/useSocket";
+import { useSocket } from "../../contexts/SocketContext";
 
 const signs = [
   "Aries",
@@ -31,6 +31,546 @@ const zodiacSymbols = {
   Capricorn: "♑",
   Aquarius: "♒",
   Pisces: "♓",
+};
+
+// Notable traits for each zodiac sign
+const zodiacTraits = {
+  Aries: ["Annie Leonhart", "Eren Yeager", "Hidan"],
+  Taurus: ["Choji Akimichi", "Deidara", "Kankuro"],
+  Gemini: ["Itachi Uchiha", "Ymir", "Karin Uzumaki"],
+  Cancer: ["Neji Hyuga", "Kushina Uzumaki", "Madara Uchiha"],
+  Leo: ["Sasuke Uchiha", "Historia Reiss", "Fugaku Uchiha"],
+  Virgo: ["Hange Zoë", "Kakashi Hatake", "Shikamaru Nara"],
+  Libra: ["Ino Yamanaka", "Naruto Uzumaki", "Mikoto Uchiha"],
+  Scorpio: ["L Lawliet", "Armin Arlert", "Yagura Karatachi"],
+  Sagittarius: ["Zabuza Momochi", "Mikoto Uchiha", "Mello"],
+  Capricorn: ["Levi Ackerman", "Misa Amane", "Gaara"],
+  Aquarius: ["Mikasa Ackerman", "Obito Uchiha", "Konohamaru Sarutobi"],
+  Pisces: ["Light Yagami", "Rin Nohara", "Isaribi"],
+};
+
+// Character data with images and quotes
+const characterData = {
+  "Annie Leonhart": {
+    image:
+      "https://static.wikia.nocookie.net/shingekinokyojin/images/9/9c/Annie_Leonhart_%28Anime%29_character_image.png",
+    quotes: [
+      "I just want to go home.",
+      "I'm going to see my father again.",
+      "I failed to become a warrior.",
+      "The worst part about people is that they're all so selfish.",
+      "I don't think I'm a good person.",
+      "I'll do whatever it takes to return home.",
+      "I can't be the good person everyone wants me to be.",
+      "My father is waiting for me.",
+      "I've done terrible things to get this far.",
+    ],
+  },
+  "Eren Yeager": {
+    image:
+      "https://static.wikia.nocookie.net/shingekinokyojin/images/d/d8/Eren_Yeager_%28Anime%29_character_image.png",
+    quotes: [
+      "I'll kill them all! Every last one of them!",
+      "If you win, you live. If you lose, you die. If you don't fight, you can't win!",
+      "I'm free.",
+      "Because I was born into this world.",
+      "Fight! Fight! Fight!",
+      "Freedom is what I seek.",
+      "I keep moving forward, until my enemies are destroyed.",
+      "The only way to truly escape the monsters is to become a monster yourself.",
+      "I won't hesitate anymore. No matter what enemies I face, I won't let anyone else die.",
+    ],
+  },
+  Hidan: {
+    image: "https://static.wikia.nocookie.net/naruto/images/2/25/Hidan.png",
+    quotes: [
+      "I'm immortal! Try and kill me!",
+      "Hey! Don't ignore me when I'm trying to kill you!",
+      "Lord Jashin will be pleased with this sacrifice.",
+      "Pain makes me feel so alive!",
+      "I hate it when people don't scream when they're supposed to be in pain.",
+      "My religion teaches that pain and death are sacred.",
+      "Jashin-sama demands blood!",
+      "You can't kill what's already immortal!",
+      "This is so not cool!",
+    ],
+  },
+  "Choji Akimichi": {
+    image:
+      "https://static.wikia.nocookie.net/naruto/images/8/8c/Ch%C5%8Dji_Akimichi.png",
+    quotes: [
+      "I'm not fat, I'm big-boned!",
+      "A real man never goes back on his word!",
+      "Being different isn't a bad thing. It means you're brave enough to be yourself.",
+      "I may be big, but I'm not slow!",
+      "Food is important! You can't fight on an empty stomach!",
+      "My friends mean everything to me!",
+      "Size doesn't matter when you have heart!",
+      "I'll protect my friends no matter what!",
+      "Never give up on your friends!",
+    ],
+  },
+  Deidara: {
+    image: "https://static.wikia.nocookie.net/naruto/images/3/31/Deidara.png",
+    quotes: [
+      "Art is an explosion!",
+      "True art is an explosion, un!",
+      "My art is superior!",
+      "Beauty is something that lasts only for a moment.",
+      "Art should be a single moment of brilliance!",
+      "I hate eternal art! Art is meant to be fleeting!",
+      "My explosions are the ultimate art form!",
+      "This is true art, un!",
+      "Art is meant to be appreciated in the moment it's destroyed!",
+    ],
+  },
+  Kankuro: {
+    image:
+      "https://static.wikia.nocookie.net/naruto/images/0/06/Kankur%C5%8D.png",
+    quotes: [
+      "A puppet master's greatest strength is never having to get close to the enemy.",
+      "I don't like being manipulated.",
+      "My puppets are my weapons and my art.",
+      "The real puppet master stays hidden.",
+      "I'll show you what a real puppet master can do!",
+      "Don't underestimate the Sand Village!",
+      "My puppets have more personality than most people.",
+      "Strategy is everything in battle.",
+      "I fight from the shadows, where real power lies.",
+    ],
+  },
+  "Itachi Uchiha": {
+    image:
+      "https://static.wikia.nocookie.net/naruto/images/b/bb/Itachi_Uchiha.png",
+    quotes: [
+      "Those who forgive themselves, and are able to accept their true nature... They are the strong ones!",
+      "People's lives don't end when they die. It ends when they lose faith.",
+      "Knowledge and awareness are vague, and perhaps better called illusions.",
+      "You and I are flesh and blood. I'm always going to be there for you, even if it's only as an obstacle for you to overcome.",
+      "We are humans, not fish. We don't know what kind of people we truly are until the moment before our deaths.",
+      "Growth occurs when one goes beyond one's limits.",
+      "It is not wise to judge others based on your own preceptions and by their appearances.",
+      "True change cannot be made if it is bound by laws and limitations.",
+      "Self-sacrifice... A nameless shinobi who protects peace within its shadow.",
+    ],
+  },
+  Ymir: {
+    image:
+      "https://static.wikia.nocookie.net/shingekinokyojin/images/c/c8/Ymir_%28Anime%29_character_image.png",
+    quotes: [
+      "I'm gonna live for myself!",
+      "Sorry, but this time I'm putting myself first.",
+      "I finally found something more important than my own life.",
+      "I'm not going to live my life according to other people's expectations anymore.",
+      "Live a life you're proud of.",
+      "I choose to live for myself, not for others.",
+      "Sometimes you have to abandon the life you planned to live the life that's waiting for you.",
+      "I won't let anyone else decide my fate.",
+      "My life belongs to me, and me alone.",
+    ],
+  },
+  "Karin Uzumaki": {
+    image:
+      "https://static.wikia.nocookie.net/naruto/images/e/e7/Karin_Uzumaki.png",
+    quotes: [
+      "Sasuke-kun!",
+      "I can sense chakra signatures from far away.",
+      "My chakra has healing properties.",
+      "Don't underestimate the Uzumaki clan!",
+      "I'll do anything for Sasuke!",
+      "My sensory abilities are unmatched!",
+      "The Uzumaki clan has special powers!",
+      "I can heal others with my chakra.",
+      "Sasuke's chakra is so beautiful!",
+    ],
+  },
+  "Neji Hyuga": {
+    image:
+      "https://static.wikia.nocookie.net/naruto/images/7/70/Neji_Hy%C5%ABga.png",
+    quotes: [
+      "Fate is not in man's hands.",
+      "A bird in a cage will never know what freedom feels like.",
+      "There is no such thing as chance in this accursed world.",
+      "People can't change. They're bound by their destiny.",
+      "The Hyuga clan's destiny cannot be changed.",
+      "I can see through your moves with my Byakugan!",
+      "Fate has already decided the outcome of this battle.",
+      "Your attacks are useless against the Gentle Fist!",
+      "I will not lose to someone weaker than me!",
+    ],
+  },
+  "Kushina Uzumaki": {
+    image:
+      "https://static.wikia.nocookie.net/naruto/images/4/42/Kushina_Uzumaki.png",
+    quotes: [
+      "I love you, Naruto.",
+      "Don't be a picky eater! Eat lots and grow strong!",
+      "Find someone like your mother to marry!",
+      "The red thread of fate will bring you together with the right person.",
+      "Be strong, my son.",
+      "I wanted to tell you so many things.",
+      "You're going to face painful times, but never give up!",
+      "I'm so proud of you, Naruto.",
+      "Take care of yourself and follow your dreams!",
+    ],
+  },
+  "Madara Uchiha": {
+    image:
+      "https://static.wikia.nocookie.net/naruto/images/1/15/Madara_Uchiha.png",
+    quotes: [
+      "Wake up to reality! Nothing ever goes as planned in this accursed world.",
+      "In this world, wherever there is light, there are also shadows.",
+      "Would you consider dying together Teamwork as well?",
+      "Power is not will, it is the phenomenon of physically making things happen.",
+      "The longer you live, the more you realize that reality is just made of pain, suffering and emptiness.",
+      "Hope is nothing but an illusion.",
+      "Man seeks peace, yet at the same time yearning for war.",
+      "The concept of hope is nothing more than giving up.",
+      "It's not possible to see one's own face with one's own eyes, right?",
+    ],
+  },
+  "Sasuke Uchiha": {
+    image:
+      "https://static.wikia.nocookie.net/naruto/images/2/21/Sasuke_Uchiha.png",
+    quotes: [
+      "I have long since closed my eyes... My only goal is in the darkness.",
+      "It's not the future I dream of anymore, only the past.",
+      "I understand now. Even if I must take the devil's fruit, I must gain power.",
+      "My name is Sasuke Uchiha. I hate a lot of things, and I don't particularly like anything.",
+      "I'll bear the burden of your hatred... and we'll die together!",
+      "If you attack Konoha, I will have to fight you.",
+      "I'm going to restore my clan, and kill a certain someone.",
+      "Power is everything in this world.",
+      "I will gain power, even if I become a snake!",
+    ],
+  },
+  "Historia Reiss": {
+    image:
+      "https://static.wikia.nocookie.net/shingekinokyojin/images/a/a8/Historia_Reiss_%28Anime%29_character_image.png",
+    quotes: [
+      "I'm the worst girl in the world.",
+      "I don't want to be humanity's enemy anymore.",
+      "I want to live a life I can be proud of.",
+      "I'm Historia Reiss, the true ruler of the walls.",
+      "I choose to fight!",
+      "I won't run away anymore.",
+      "I have to live for myself.",
+      "The people have a right to know the truth.",
+      "I'll face my destiny head on.",
+    ],
+  },
+  "Fugaku Uchiha": {
+    image:
+      "https://static.wikia.nocookie.net/naruto/images/9/94/Fugaku_Uchiha.png",
+    quotes: [
+      "The Uchiha clan's pride must be restored.",
+      "Sasuke, you are my pride.",
+      "The village has lost faith in the Uchiha clan.",
+      "We must restore our clan's honor.",
+      "Itachi, I'm proud of you.",
+      "The Sharingan is the pride of the Uchiha.",
+      "Our clan has been pushed too far.",
+      "I will protect the Uchiha legacy.",
+      "The clan comes first, always.",
+    ],
+  },
+  "Hange Zoë": {
+    image:
+      "https://static.wikia.nocookie.net/shingekinokyojin/images/a/a9/Hange_Zo%C3%AB_%28Anime%29_character_image.png",
+    quotes: [
+      "If there's something you don't understand, learn to understand it.",
+      "The only thing we're allowed to do is believe that we won't regret the choice we made.",
+      "I think pain is the best discipline.",
+      "When people are faced with a situation they don't understand, they reject and attack.",
+      "Let's torture them!",
+      "This is so exciting!",
+      "Science is the best!",
+      "Knowledge is power!",
+      "Every discovery brings us closer to the truth!",
+    ],
+  },
+  "Kakashi Hatake": {
+    image:
+      "https://static.wikia.nocookie.net/naruto/images/2/27/Kakashi_Hatake.png",
+    quotes: [
+      "Those who break the rules are scum, but those who abandon their friends are worse than scum.",
+      "I'm telling you this because you don't get it. You think you get it, which is not the same as actually getting it.",
+      "In the ninja world, those who break the rules are trash, that's true, but those who abandon their friends are worse than trash.",
+      "Sorry I'm late, I got lost on the path of life.",
+      "The next generation will always surpass the previous one.",
+      "A ninja must see through deception.",
+      "Teamwork is essential for a ninja.",
+      "Never give up without even trying.",
+      "To know what is right and choose to ignore it is the act of a coward.",
+    ],
+  },
+  "Shikamaru Nara": {
+    image:
+      "https://static.wikia.nocookie.net/naruto/images/a/a5/Shikamaru_Nara.png",
+    quotes: [
+      "What a drag.",
+      "Real men don't show off their strength.",
+      "I prefer not to get involved in troublesome things.",
+      "A real man should be able to admit when he's outmatched.",
+      "Sometimes the most important battles are the ones we don't want to fight.",
+      "Man, what a drag... but I guess I have no choice.",
+      "Laziness is the mother of all invention.",
+      "Too troublesome...",
+      "The difference in our power is like the difference between a drop of rain and the ocean.",
+    ],
+  },
+  "Ino Yamanaka": {
+    image:
+      "https://static.wikia.nocookie.net/naruto/images/f/fc/Ino_Yamanaka.png",
+    quotes: [
+      "A girl has to be strong, beautiful, and able to kick butt!",
+      "I'm not going to lose to you, Sakura!",
+      "Beauty is a weapon too!",
+      "A kunoichi should be beautiful and strong!",
+      "I'll never give up on my dreams!",
+      "Flowers bloom most beautifully right before they wilt.",
+      "I won't lose to anyone when it comes to beauty!",
+      "Mind over matter!",
+      "I'll show you the power of the Yamanaka clan!",
+    ],
+  },
+  "Naruto Uzumaki": {
+    image:
+      "https://static.wikia.nocookie.net/naruto/images/d/dd/Naruto_Uzumaki%21%21.png",
+    quotes: [
+      "I'm gonna be Hokage someday!",
+      "Believe it!",
+      "I never go back on my word! That's my nindo, my ninja way!",
+      "If you don't like your destiny, don't accept it. Instead, have the courage to change it the way you want it to be!",
+      "I won't run away anymore... I won't go back on my word... that is my ninja way!",
+      "When people are protecting something truly special to them, they truly can become... as strong as they can be.",
+      "Hard work is what makes your dreams come true!",
+      "I'm not gonna run away, I never go back on my word! That's my nindo: my ninja way!",
+      "The pain of being alone is completely out of this world, isn't it?",
+    ],
+  },
+  "Mikoto Uchiha": {
+    image:
+      "https://static.wikia.nocookie.net/naruto/images/1/14/Mikoto_Uchiha.png",
+    quotes: [
+      "Sasuke, you're still so young.",
+      "I'm proud of both my sons.",
+      "Family is the most important thing.",
+      "The Uchiha clan has a proud history.",
+      "Take care of your brother, Itachi.",
+      "Love is what makes a family strong.",
+      "I believe in both of you.",
+      "Our boys will grow up to be fine shinobi.",
+      "A mother's love never fades.",
+    ],
+  },
+  "L Lawliet": {
+    image:
+      "https://static.wikia.nocookie.net/deathnote/images/1/1d/L_lawliet.jpg",
+    quotes: [
+      "I am Justice!",
+      "There are many types of monsters in this world.",
+      "The bells are ringing... they're going to die.",
+      "I could actually fall for someone like Misa.",
+      "If Kira gets caught, he is evil. If Kira rules the world, he is justice.",
+      "Sometimes, the questions are complicated and the answers are simple.",
+      "I have two rules: First, I'm never wrong. Second, if I'm wrong, see the first rule.",
+      "Risking your life and doing something that could easily rob you of your life are exact opposites.",
+      "Justice will prevail!",
+    ],
+  },
+  "Armin Arlert": {
+    image:
+      "https://static.wikia.nocookie.net/shingekinokyojin/images/1/16/Armin_Arlert_%28Anime%29_character_image.png",
+    quotes: [
+      "Someone who can't sacrifice anything, can't change anything.",
+      "People who can't throw something important away, can never hope to change anything.",
+      "A person who cannot sacrifice everything, cannot change anything.",
+      "The people who have the ability to change things are people who can throw away everything dear to them.",
+      "When faced with two choices, simply toss a coin. Not because it settles the question, but because in that brief moment the coin is in the air, you know what you're hoping for.",
+      "I don't like the terms 'good person' or 'bad person' because it's impossible to be entirely good to everyone.",
+      "Everyone had to be drunk on something to keep pushing on.",
+      "I want to see the outside world.",
+      "Knowledge is freedom!",
+    ],
+  },
+  "Yagura Karatachi": {
+    image:
+      "https://static.wikia.nocookie.net/naruto/images/e/e6/Yagura_render.png",
+    quotes: [
+      "The village must be protected at all costs.",
+      "I am the Fourth Mizukage.",
+      "Power is everything in this world.",
+      "The strong survive, the weak perish.",
+      "I will not tolerate weakness.",
+      "The Mist Village will be supreme.",
+      "Strength is the only truth.",
+      "I control the Three-Tails.",
+      "Fear is a powerful motivator.",
+    ],
+  },
+  "Zabuza Momochi": {
+    image:
+      "https://static.wikia.nocookie.net/naruto/images/1/14/Zabuza_Momochi.png",
+    quotes: [
+      "You talk too much, kid.",
+      "In this world, the weak don't get to choose how they die.",
+      "A shinobi is a tool. Nothing more, nothing less.",
+      "When a man learns to love, he must bear the risk of hatred.",
+      "Once I'm through with you, you'll never want to be a ninja again.",
+      "Silent killing is an art form.",
+      "The demon of the mist will show no mercy.",
+      "Tools don't have feelings.",
+      "This is the end of your story.",
+    ],
+  },
+  Mello: {
+    image: "https://static.wikia.nocookie.net/deathnote/images/8/82/Mello.jpg",
+    quotes: [
+      "I'll show Near that I'm better!",
+      "Near, I'll surpass you no matter what!",
+      "Chocolate makes everything better.",
+      "I won't lose to Near!",
+      "I'll be the one to catch Kira!",
+      "Competition brings out the best in people.",
+      "I refuse to work with Near!",
+      "My methods may be extreme, but they get results.",
+      "Being second best isn't good enough!",
+    ],
+  },
+  "Levi Ackerman": {
+    image:
+      "https://static.wikia.nocookie.net/shingekinokyojin/images/2/25/Levi_Ackerman_%28Anime%29_character_image.png",
+    quotes: [
+      "I don't know which option you should choose. I could never advise you on that... No matter what kind of wisdom dictates you the option you pick, acting according to it isn't something you'll be able to do. Because... humans are that kind of creatures.",
+      "The difference in judgment between you and me, originates from different rules derived from past experience.",
+      "I want to put an end to that recurring nightmare, right now.",
+      "Kenny, I'll entrust the future to them.",
+      "Give up on your dreams and die.",
+      "Tch.",
+      "Clean up after yourself.",
+      "I'm going to kill that beast.",
+      "Erwin... how do you want to die?",
+    ],
+  },
+  "Misa Amane": {
+    image:
+      "https://static.wikia.nocookie.net/deathnote/images/e/ee/Misa_Amane.jpg",
+    quotes: [
+      "Misa Misa is so happy!",
+      "I can't live in a world without Light!",
+      "Light is my everything!",
+      "I'd do anything for Kira!",
+      "Love and justice will always win!",
+      "Rem, thank you for everything.",
+      "I have the Shinigami Eyes!",
+      "Light-kun is amazing!",
+      "I'll help you create a new world!",
+    ],
+  },
+  Gaara: {
+    image: "https://static.wikia.nocookie.net/naruto/images/0/0f/Gaara.png",
+    quotes: [
+      "A soul needs a purpose to live and so I concluded that my purpose was to kill everyone besides myself.",
+      "I fight for my sake only and live to love only myself.",
+      "The weak don't get to choose how they die.",
+      "I am a relic they want to get rid of, so why do I exist and live?",
+      "Perhaps the companionship of an evil person is preferable to loneliness.",
+      "One day I'd like to become necessary to someone.",
+      "I want to be needed.",
+      "Love breeds sacrifice, which breeds hatred. Then you know pain.",
+      "Maybe... just maybe... there really is a purpose for me.",
+    ],
+  },
+  "Mikasa Ackerman": {
+    image:
+      "https://static.wikia.nocookie.net/shingekinokyojin/images/d/d4/Mikasa_Ackerman_%28Anime%29_character_image.png",
+    quotes: [
+      "If I can't be of use, then there's no point in me living.",
+      "I'm strong... Real strong.",
+      "I'll wrap that scarf around you as many times as you want.",
+      "This world is cruel, but also very beautiful.",
+      "I won't hesitate anymore.",
+      "Eren, I'll follow you anywhere.",
+      "I'll kill anyone who tries to hurt you.",
+      "The world is a cruel place.",
+      "I have to protect what's important to me.",
+    ],
+  },
+  "Obito Uchiha": {
+    image:
+      "https://static.wikia.nocookie.net/naruto/images/a/a5/Obito_Uchiha.png",
+    quotes: [
+      "Those who abandon their friends are worse than scum.",
+      "I'm going to create a world where heroes don't have to make that choice!",
+      "In this world, wherever there is light, there are also shadows.",
+      "The moment people come to know love, they run the risk of carrying hate.",
+      "Those who break the rules are trash, but those who abandon their comrades are worse than trash!",
+      "I will create a perfect world.",
+      "This reality is hell.",
+      "I want to be Hokage!",
+      "Rin... I failed to protect you.",
+    ],
+  },
+  "Konohamaru Sarutobi": {
+    image:
+      "https://static.wikia.nocookie.net/naruto/images/0/0f/Konohamaru_Sarutobi.png",
+    quotes: [
+      "I'm gonna be Hokage before Naruto!",
+      "Don't underestimate me!",
+      "Boss! Teach me that jutsu!",
+      "I'll surpass the Third Hokage!",
+      "Believe it! ...I mean, that's my thing now!",
+      "I learned this from the boss!",
+      "The Will of Fire burns within me!",
+      "I'll protect the village!",
+      "Sexy Jutsu!",
+    ],
+  },
+  "Light Yagami": {
+    image:
+      "https://static.wikia.nocookie.net/deathnote/images/8/8c/Light_Yagami.jpg",
+    quotes: [
+      "I am Kira!",
+      "I'll take a potato chip... and eat it!",
+      "I am justice! I protect the innocent and those who fear evil!",
+      "This world is rotten, and those who are making it rot deserve to die.",
+      "I have become justice, the only hope for mankind.",
+      "I will become the god of this new world!",
+      "L, do you know Gods of Death love apples?",
+      "I'll solve equations with my right hand and write names with my left.",
+      "I'll create a perfect world!",
+    ],
+  },
+  "Rin Nohara": {
+    image:
+      "https://static.wikia.nocookie.net/naruto/images/2/27/Rin_Nohara.png",
+    quotes: [
+      "I'll always watch over you, Obito.",
+      "Thank you, Kakashi.",
+      "I believe in both of you.",
+      "We're a team, aren't we?",
+      "Obito, you're not worthless.",
+      "I want to protect everyone.",
+      "The village must be protected.",
+      "Kakashi, please...",
+      "I'm sorry, Obito.",
+    ],
+  },
+  Isaribi: {
+    image: "https://static.wikia.nocookie.net/naruto/images/3/3a/Isaribi.png",
+    quotes: [
+      "I just want to be normal again.",
+      "Please help me return to my human form.",
+      "I never wanted to hurt anyone.",
+      "The experiments changed me.",
+      "I dream of the sea.",
+      "Can I ever be human again?",
+      "I miss being myself.",
+      "The ocean calls to me.",
+      "I want to find my place in this world.",
+    ],
+  },
 };
 
 // Comprehensive compatibility scoring system (0-100)
@@ -1186,7 +1726,6 @@ export default function ZodiacCompatibility({ user, onLogin }) {
   const [selectedPartner, setSelectedPartner] = useState(null);
   const [selectedPerspective, setSelectedPerspective] = useState(null);
   const [detailView, setDetailView] = useState(false);
-  const [messageInput, setMessageInput] = useState("");
 
   // Real-time socket connection
   const {
@@ -1214,8 +1753,6 @@ export default function ZodiacCompatibility({ user, onLogin }) {
     setSelectedPerspective(null);
     setDetailView(false);
     setCurrentPage("selection");
-    setMessageInput("");
-    disconnect(); // Disconnect from socket and reset chat state
   };
 
   // Generate random user data
@@ -1665,110 +2202,6 @@ export default function ZodiacCompatibility({ user, onLogin }) {
     );
   };
 
-  // Chat Interface
-  const renderChatInterface = () => {
-    const handleSendMessage = () => {
-      if (messageInput.trim() && isMatched) {
-        sendMessage(messageInput.trim());
-        setMessageInput("");
-      }
-    };
-
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 text-white p-4 sm:p-6 md:p-8">
-        <div className="max-w-4xl mx-auto">
-          {/* Chat Header */}
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col sm:flex-row items-center justify-between mb-6 gap-4 bg-white/10 p-4 rounded-xl backdrop-blur-sm"
-          >
-            <button
-              onClick={goBackToSelection}
-              className="flex items-center space-x-2 bg-purple-600 hover:bg-purple-500 px-4 py-2 rounded-lg transition-colors text-sm w-full sm:w-auto justify-center sm:justify-start"
-            >
-              <span>←</span>
-              <span>Back to Compatibility</span>
-            </button>
-
-            <div className="text-center flex-1">
-              <h1 className="text-xl sm:text-2xl font-bold">
-                💬 Chatting with {matchData?.partner?.name || "Partner"}
-              </h1>
-              <p className="text-sm text-purple-200">
-                {matchData?.partner?.sign &&
-                  zodiacSymbols[matchData.partner.sign]}{" "}
-                {matchData?.partner?.sign || "Unknown"} • Real person!
-              </p>
-            </div>
-
-            <div className="hidden sm:block sm:w-32"></div>
-          </motion.div>
-
-          {/* Chat Messages */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.2 }}
-            className="bg-white/5 rounded-xl p-4 mb-4 h-96 overflow-y-auto space-y-3"
-          >
-            {messages.map((message) => (
-              <motion.div
-                key={message.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className={`flex ${
-                  message.type === "user"
-                    ? "justify-end"
-                    : message.type === "system"
-                    ? "justify-center"
-                    : "justify-start"
-                }`}
-              >
-                <div
-                  className={`max-w-xs sm:max-w-md p-3 rounded-lg ${
-                    message.type === "user"
-                      ? "bg-gradient-to-r from-pink-500 to-purple-600 text-white"
-                      : message.type === "system"
-                      ? "bg-yellow-500/20 text-yellow-200 text-center text-sm"
-                      : "bg-white/10 text-white"
-                  }`}
-                >
-                  <p className="text-sm sm:text-base">{message.text}</p>
-                  <p className="text-xs opacity-70 mt-1">{message.timestamp}</p>
-                </div>
-              </motion.div>
-            ))}
-          </motion.div>
-
-          {/* Message Input */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="flex gap-2"
-          >
-            <input
-              type="text"
-              value={messageInput}
-              onChange={(e) => setMessageInput(e.target.value)}
-              onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
-              placeholder="Type your message..."
-              className="flex-1 px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-400"
-            />
-            <button
-              onClick={handleSendMessage}
-              disabled={!messageInput.trim()}
-              className="px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-all duration-200"
-            >
-              Send
-            </button>
-          </motion.div>
-        </div>
-      </div>
-    );
-  };
-
   // Detailed Compatibility View
   const renderDetailedCompatibility = () => {
     let content = "";
@@ -1919,38 +2352,30 @@ export default function ZodiacCompatibility({ user, onLogin }) {
   };
 
   return (
-    <AnimatePresence mode="wait">
-      {isMatched ? (
-        <motion.div
-          key="chat"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.3 }}
-        >
-          {renderChatInterface()}
-        </motion.div>
-      ) : currentPage === "selection" ? (
-        <motion.div
-          key="selection"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.3 }}
-        >
-          {renderSelectionPage()}
-        </motion.div>
-      ) : (
-        <motion.div
-          key="results"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.3 }}
-        >
-          {renderResultsPage()}
-        </motion.div>
-      )}
-    </AnimatePresence>
+    <>
+      <AnimatePresence mode="wait">
+        {currentPage === "selection" ? (
+          <motion.div
+            key="selection"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            {renderSelectionPage()}
+          </motion.div>
+        ) : (
+          <motion.div
+            key="results"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            {renderResultsPage()}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   );
 }

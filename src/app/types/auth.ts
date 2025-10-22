@@ -16,12 +16,15 @@ export interface User {
   password: string;
   zodiacChart: ZodiacChart;
   createdAt: string;
+  isGuest?: boolean;
 }
 
 export interface AuthData {
   username: string;
   password: string;
   isLogin: boolean;
+  isGuest?: boolean;
+  rememberMe?: boolean;
   birthDate?: string;
   birthTime?: string;
   birthLocation?: string;
