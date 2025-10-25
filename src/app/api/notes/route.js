@@ -30,7 +30,7 @@ export async function POST(request) {
 
     const note = addNote(noteData);
     return NextResponse.json(note, { status: 201 });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "Invalid request data" },
       { status: 400 }

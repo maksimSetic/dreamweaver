@@ -112,9 +112,13 @@ export const SocketProvider = ({ children, onMatchFound }) => {
       console.log("Match found:", data);
       setIsQueuing(false);
       setIsMatched(true);
-      setMatchData(data);
+      setMatchData(data); // This should include matchId
       setPartnerDisconnected(false); // Reset partner disconnected state
       setChatClosed(false); // Reset chat closed state
+
+      console.log("Match data stored:", data);
+      console.log("Match ID:", data.matchId);
+
       setMessages([
         {
           id: "system-1",
@@ -144,11 +148,15 @@ export const SocketProvider = ({ children, onMatchFound }) => {
         {
           id: `msg-${Date.now()}`,
           type: "received",
-          text: messageData.message,
-          sender: messageData.sender,
+          text: messageData.message || messageData.text, // Support both message and text fields
+          sender: messageData.sender || messageData.senderId,
           timestamp: new Date().toLocaleTimeString(),
         },
       ]);
+    });
+
+    socketInstance.on("message-sent", (messageData) => {
+      console.log("Message sent confirmation:", messageData);
     });
 
     socketInstance.on("partner-disconnected", () => {
@@ -215,10 +223,11 @@ export const SocketProvider = ({ children, onMatchFound }) => {
     if (socket && isMatched && matchData) {
       const messageData = {
         message,
-        roomId: matchData.roomId,
+        matchId: matchData.matchId, // Use matchId instead of roomId
         timestamp: new Date().toISOString(),
       };
 
+      console.log("Sending message:", messageData);
       socket.emit("send-message", messageData);
 
       // Add to local messages immediately
@@ -231,6 +240,13 @@ export const SocketProvider = ({ children, onMatchFound }) => {
           timestamp: new Date().toLocaleTimeString(),
         },
       ]);
+    } else {
+      console.log("Cannot send message - missing requirements:", {
+        socket: !!socket,
+        isMatched,
+        matchData: !!matchData,
+        matchId: matchData?.matchId,
+      });
     }
   };
 

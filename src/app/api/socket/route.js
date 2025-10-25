@@ -6,7 +6,7 @@ let userQueue = [];
 let activeMatches = new Map(); // matchId -> {user1, user2, messages}
 let userSockets = new Map(); // userId -> socketId
 
-export async function GET(request) {
+export async function GET() {
   if (!io) {
     // Initialize Socket.IO server
     const { createServer } = await import("http");

@@ -289,6 +289,22 @@ export default function MainContent({ active, user, onLogin, setActive }) {
 
   // Match found modal state
   const [showMatchFoundModal, setShowMatchFoundModal] = useState(false);
+  const [hasShownMatchModal, setHasShownMatchModal] = useState(() => {
+    // If there's already match data in localStorage, assume modal has been shown
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("dreamweaver-match-state");
+      return saved ? JSON.parse(saved).isMatched || false : false;
+    }
+    return false;
+  });
+  const [currentMatchId, setCurrentMatchId] = useState(() => {
+    // Get current match ID from localStorage if it exists
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("dreamweaver-match-state");
+      return saved ? JSON.parse(saved).matchData?.matchId || null : null;
+    }
+    return null;
+  });
 
   // Get characters for the current user's zodiac sign
   const allCharacters = getAllCharacters(user?.zodiacChart?.sun) || [];
@@ -301,14 +317,32 @@ export default function MainContent({ active, user, onLogin, setActive }) {
     }
   }, [isMatched, matchData, chatClosed, active, setActive]);
 
-  // Show match found modal when a new match is found
+  // Show match found modal when a new match is found (only once per match)
   useEffect(() => {
-    if (isMatched && matchData && !chatClosed) {
+    // Check if this is a completely new match
+    const newMatchId = matchData?.matchId;
+    if (
+      isMatched &&
+      matchData &&
+      !chatClosed &&
+      newMatchId !== currentMatchId
+    ) {
+      setCurrentMatchId(newMatchId);
+      setHasShownMatchModal(false); // Reset flag for new match
       setShowMatchFoundModal(true);
-    } else {
-      setShowMatchFoundModal(false);
+      setHasShownMatchModal(true); // Mark that we've shown the modal for this match
     }
-  }, [isMatched, matchData, chatClosed]);
+    // Remove the second condition that was causing the modal to show on reopen
+  }, [isMatched, matchData, chatClosed, currentMatchId]);
+
+  // Reset modal flag when starting a new match or when match data changes
+  useEffect(() => {
+    if (!isMatched || !matchData) {
+      setHasShownMatchModal(false);
+      setShowMatchFoundModal(false);
+      setCurrentMatchId(null);
+    }
+  }, [isMatched, matchData]);
 
   // Character data for quote functionality (simplified version)
   const characterData = {

@@ -1,9 +1,16 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import { zodiacSymbols, getZodiacDescription } from '../utils/zodiacCalculations';
-import { UserProfileProps } from '../types/auth';
+import React from "react";
+import { motion } from "framer-motion";
+import {
+  zodiacSymbols,
+  getZodiacDescription,
+} from "../utils/zodiacCalculations";
+import { UserProfileProps } from "../types/auth";
 
-const UserProfile: React.FC<UserProfileProps> = ({ userProfile, onEdit, onClose }) => {
+const UserProfile: React.FC<UserProfileProps> = ({
+  userProfile,
+  onEdit,
+  onClose,
+}) => {
   if (!userProfile) {
     return (
       <motion.div
@@ -13,8 +20,13 @@ const UserProfile: React.FC<UserProfileProps> = ({ userProfile, onEdit, onClose 
       >
         <div className="max-w-md mx-auto bg-black/30 backdrop-blur-md rounded-xl p-6 text-center">
           <div className="text-6xl mb-4">🌟</div>
-          <h2 className="text-2xl font-bold text-white mb-4">Welcome to Dreamweaver</h2>
-          <p className="text-gray-300 mb-6">Create your profile to discover your cosmic blueprint and connect with compatible souls.</p>
+          <h2 className="text-2xl font-bold text-white mb-4">
+            Welcome to Dreamweaver
+          </h2>
+          <p className="text-gray-300 mb-6">
+            Create your profile to discover your cosmic blueprint and connect
+            with compatible souls.
+          </p>
           <button
             onClick={onEdit}
             className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 px-6 rounded-lg font-semibold hover:from-purple-700 hover:to-pink-700 transition-all duration-300"
@@ -70,7 +82,8 @@ const UserProfile: React.FC<UserProfileProps> = ({ userProfile, onEdit, onClose 
             </div>
             <h2 className="text-2xl font-bold text-white mb-2">{username}</h2>
             <p className="text-gray-300">
-              Born on {new Date(birthInfo.date).toLocaleDateString()} in {birthInfo.location}
+              Born on {new Date(birthInfo.date).toLocaleDateString()} in{" "}
+              {birthInfo.location}
             </p>
           </div>
         </motion.div>
@@ -85,12 +98,14 @@ const UserProfile: React.FC<UserProfileProps> = ({ userProfile, onEdit, onClose 
             className="bg-gradient-to-br from-yellow-500/20 to-orange-500/20 backdrop-blur-md rounded-xl p-6 border border-yellow-500/30"
           >
             <div className="text-center mb-4">
-              <div className="text-4xl mb-2">{zodiacSymbols[sun]}</div>
+              <div className="text-4xl mb-2">
+                {zodiacSymbols[sun as keyof typeof zodiacSymbols]}
+              </div>
               <h3 className="text-xl font-bold text-yellow-300">Sun Sign</h3>
               <p className="text-2xl font-bold text-white">{sun}</p>
             </div>
             <p className="text-gray-300 text-sm leading-relaxed">
-              {getZodiacDescription(sun, 'sun')}
+              {getZodiacDescription(sun, "sun")}
             </p>
           </motion.div>
 
@@ -102,12 +117,14 @@ const UserProfile: React.FC<UserProfileProps> = ({ userProfile, onEdit, onClose 
             className="bg-gradient-to-br from-blue-500/20 to-purple-500/20 backdrop-blur-md rounded-xl p-6 border border-blue-500/30"
           >
             <div className="text-center mb-4">
-              <div className="text-4xl mb-2">{zodiacSymbols[moon]}</div>
+              <div className="text-4xl mb-2">
+                {zodiacSymbols[moon as keyof typeof zodiacSymbols]}
+              </div>
               <h3 className="text-xl font-bold text-blue-300">Moon Sign</h3>
               <p className="text-2xl font-bold text-white">{moon}</p>
             </div>
             <p className="text-gray-300 text-sm leading-relaxed">
-              {getZodiacDescription(moon, 'moon')}
+              {getZodiacDescription(moon, "moon")}
             </p>
           </motion.div>
 
@@ -119,12 +136,14 @@ const UserProfile: React.FC<UserProfileProps> = ({ userProfile, onEdit, onClose 
             className="bg-gradient-to-br from-green-500/20 to-teal-500/20 backdrop-blur-md rounded-xl p-6 border border-green-500/30"
           >
             <div className="text-center mb-4">
-              <div className="text-4xl mb-2">{zodiacSymbols[rising]}</div>
+              <div className="text-4xl mb-2">
+                {zodiacSymbols[rising as keyof typeof zodiacSymbols]}
+              </div>
               <h3 className="text-xl font-bold text-green-300">Rising Sign</h3>
               <p className="text-2xl font-bold text-white">{rising}</p>
             </div>
             <p className="text-gray-300 text-sm leading-relaxed">
-              {getZodiacDescription(rising, 'rising')}
+              {getZodiacDescription(rising, "rising")}
             </p>
           </motion.div>
         </div>
@@ -142,16 +161,21 @@ const UserProfile: React.FC<UserProfileProps> = ({ userProfile, onEdit, onClose 
           </h3>
           <div className="text-gray-300 leading-relaxed">
             <p className="mb-4">
-              Your unique astrological signature reveals a fascinating cosmic blend. As a <strong className="text-yellow-300">{sun} Sun</strong>, 
-              you radiate the core essence of {sun.toLowerCase()} energy, driving your fundamental identity and life purpose.
+              Your unique astrological signature reveals a fascinating cosmic
+              blend. As a <strong className="text-yellow-300">{sun} Sun</strong>
+              , you radiate the core essence of {sun.toLowerCase()} energy,
+              driving your fundamental identity and life purpose.
             </p>
             <p className="mb-4">
-              Your <strong className="text-blue-300">{moon} Moon</strong> illuminates your emotional landscape, showing how you process 
+              Your <strong className="text-blue-300">{moon} Moon</strong>{" "}
+              illuminates your emotional landscape, showing how you process
               feelings and what you need for inner security and comfort.
             </p>
             <p>
-              With <strong className="text-green-300">{rising} Rising</strong>, you present yourself to the world with the energy of 
-              {rising.toLowerCase()}, influencing first impressions and your natural approach to new experiences.
+              With <strong className="text-green-300">{rising} Rising</strong>,
+              you present yourself to the world with the energy of
+              {rising.toLowerCase()}, influencing first impressions and your
+              natural approach to new experiences.
             </p>
           </div>
         </motion.div>
@@ -163,16 +187,18 @@ const UserProfile: React.FC<UserProfileProps> = ({ userProfile, onEdit, onClose 
           transition={{ delay: 0.6 }}
           className="mt-6 bg-black/20 backdrop-blur-md rounded-xl p-4"
         >
-          <h4 className="text-lg font-semibold text-white mb-2">Birth Information</h4>
+          <h4 className="text-lg font-semibold text-white mb-2">
+            Birth Information
+          </h4>
           <div className="grid md:grid-cols-3 gap-4 text-sm text-gray-300">
             <div>
               <span className="text-gray-400">Date:</span>
               <br />
-              {new Date(birthInfo.date).toLocaleDateString('en-US', { 
-                weekday: 'long', 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
+              {new Date(birthInfo.date).toLocaleDateString("en-US", {
+                weekday: "long",
+                year: "numeric",
+                month: "long",
+                day: "numeric",
               })}
             </div>
             <div>

@@ -103,14 +103,19 @@ io.on("connection", (socket) => {
 
   // Handle sending messages
   socket.on("send-message", (data) => {
-    const { matchId, message } = data;
-    const match = activeMatches.get(matchId);
+    console.log("Received message data:", data);
+    const { roomId, matchId, message } = data;
+
+    // Support both roomId (client sends) and matchId for compatibility
+    const actualMatchId = matchId || roomId;
+    const match = activeMatches.get(actualMatchId);
 
     if (match) {
       const messageData = {
         id: generateId(),
         senderId: socket.userId,
-        text: message,
+        message: message, // Use 'message' to match client expectation
+        sender: socket.userId,
         timestamp: new Date().toISOString(),
       };
 
@@ -122,12 +127,20 @@ io.on("connection", (socket) => {
         match.user1.id === socket.userId ? match.user2.id : match.user1.id;
       const otherSocketId = userSockets.get(otherUserId);
 
+      console.log(`Sending message from ${socket.userId} to ${otherUserId}`);
+
       if (otherSocketId) {
         io.to(otherSocketId).emit("receive-message", messageData);
+        console.log("Message sent to partner");
+      } else {
+        console.log("Partner socket not found");
       }
 
       // Echo back to sender for confirmation
       socket.emit("message-sent", messageData);
+    } else {
+      console.log("Match not found for matchId:", actualMatchId);
+      console.log("Active matches:", Array.from(activeMatches.keys()));
     }
   });
 

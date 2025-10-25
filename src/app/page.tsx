@@ -75,18 +75,8 @@ export default function Home() {
   const [showProfile, setShowProfile] = useState(false);
 
   // Use the new authentication hook
-  const {
-    user,
-    setUser,
-    isConnected,
-    isLoading,
-    rememberMe,
-    setRememberMe,
-    register,
-    login,
-    logout,
-    debugGetUsers,
-  } = useAuth();
+  const { user, setUser, rememberMe, register, login, logout, debugGetUsers } =
+    useAuth();
 
   // Hide auth form if user is logged in with remember me
   useEffect(() => {
@@ -168,7 +158,9 @@ export default function Home() {
 
   // Debug function - you can call this from browser console
   if (typeof window !== "undefined") {
-    (window as any).debugUsers = debugGetUsers;
+    (
+      window as typeof window & { debugUsers: typeof debugGetUsers }
+    ).debugUsers = debugGetUsers;
   }
 
   // Show authentication form if requested or if no user is logged in

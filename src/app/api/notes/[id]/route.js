@@ -30,7 +30,7 @@ export async function PUT(request, { params }) {
     }
 
     return NextResponse.json(note);
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "Invalid request data" },
       { status: 400 }
