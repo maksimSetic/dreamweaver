@@ -287,6 +287,9 @@ export default function MainContent({ active, user, onLogin, setActive }) {
   const [availableQuotes, setAvailableQuotes] = useState([]);
   const [selectedQuote, setSelectedQuote] = useState("");
 
+  // Match found modal state
+  const [showMatchFoundModal, setShowMatchFoundModal] = useState(false);
+
   // Get characters for the current user's zodiac sign
   const allCharacters = getAllCharacters(user?.zodiacChart?.sun) || [];
 
@@ -297,6 +300,15 @@ export default function MainContent({ active, user, onLogin, setActive }) {
       setActive("chat");
     }
   }, [isMatched, matchData, chatClosed, active, setActive]);
+
+  // Show match found modal when a new match is found
+  useEffect(() => {
+    if (isMatched && matchData && !chatClosed) {
+      setShowMatchFoundModal(true);
+    } else {
+      setShowMatchFoundModal(false);
+    }
+  }, [isMatched, matchData, chatClosed]);
 
   // Character data for quote functionality (simplified version)
   const characterData = {
@@ -2894,7 +2906,7 @@ export default function MainContent({ active, user, onLogin, setActive }) {
         <div>
           {user ? (
             <>
-              {isMatched && matchData && !chatClosed ? (
+              {isMatched && matchData && !chatClosed && !showMatchFoundModal ? (
                 // Chat Interface - Use the same interface from ZodiacCompatibility
                 <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 text-white p-4 sm:p-6 md:p-8">
                   <div className="max-w-4xl mx-auto">
@@ -3555,6 +3567,95 @@ export default function MainContent({ active, user, onLogin, setActive }) {
           <MysticElements user={user} onLogin={onLogin} />
         </div>
       )}
+
+      {/* Match Found Modal */}
+      <AnimatePresence>
+        {showMatchFoundModal && matchData && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.5, opacity: 0, y: 50 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.5, opacity: 0, y: 50 }}
+              transition={{ type: "spring", stiffness: 300, damping: 25 }}
+              className="bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 p-8 rounded-2xl border border-purple-300/30 max-w-md w-full text-center shadow-2xl"
+            >
+              {/* Match Found Header */}
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.2, type: "spring", stiffness: 300 }}
+                className="text-6xl mb-6"
+              >
+                ✨
+              </motion.div>
+
+              <motion.h2
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="text-3xl font-bold text-white mb-4"
+              >
+                Match Found!
+              </motion.h2>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+                className="mb-6"
+              >
+                <p className="text-purple-200 text-lg mb-4">
+                  You've been matched with
+                </p>
+                <div className="bg-white/10 p-4 rounded-xl border border-purple-300/30 mb-4">
+                  <h3 className="text-xl font-bold text-white mb-2">
+                    {matchData.partner?.name || "Your Partner"}
+                  </h3>
+                  <div className="flex justify-center items-center gap-2 text-purple-200">
+                    <span>
+                      {zodiacSymbols[matchData.partner?.sign]}{" "}
+                      {matchData.partner?.sign}
+                    </span>
+                    {matchData.partner?.moon && (
+                      <>
+                        <span>•</span>
+                        <span>🌙 {matchData.partner?.moon}</span>
+                      </>
+                    )}
+                    {matchData.partner?.rising && (
+                      <>
+                        <span>•</span>
+                        <span>⬆️ {matchData.partner?.rising}</span>
+                      </>
+                    )}
+                  </div>
+                </div>
+                <p className="text-purple-300 text-sm">
+                  Your cosmic compatibility score: {matchData.compatibility}%
+                </p>
+              </motion.div>
+
+              {/* Join Chat Button */}
+              <motion.button
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setShowMatchFoundModal(false)}
+                className="bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white font-bold py-4 px-8 rounded-xl text-lg shadow-lg hover:shadow-xl transition-all duration-300 w-full"
+              >
+                💬 Join Chat
+              </motion.button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </main>
   );
 }
