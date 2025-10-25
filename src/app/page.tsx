@@ -90,7 +90,7 @@ export default function Home() {
       // Handle guest login - create a temporary user with random zodiac signs
       const guestZodiacChart = generateRandomZodiacChart();
 
-      const guestUser = {
+      const guestUser: User = {
         username: generateGuestUsername(),
         password: "",
         zodiacChart: guestZodiacChart,
@@ -99,7 +99,7 @@ export default function Home() {
       };
 
       // Set guest user directly without server registration
-      setUser(guestUser);
+      (setUser as (user: User | null) => void)(guestUser);
       setShowAuth(false);
       return;
     }

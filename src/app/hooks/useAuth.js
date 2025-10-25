@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { io } from "socket.io-client";
 
 export const useAuth = () => {
@@ -7,6 +7,12 @@ export const useAuth = () => {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const rememberMeRef = useRef(rememberMe);
+
+  // Update ref when rememberMe changes
+  useEffect(() => {
+    rememberMeRef.current = rememberMe;
+  }, [rememberMe]);
 
   useEffect(() => {
     // Initialize socket connection for authentication
@@ -28,7 +34,7 @@ export const useAuth = () => {
       setUser(userData);
       setIsLoading(false);
       // Store user in localStorage for session persistence
-      if (rememberMe) {
+      if (rememberMeRef.current) {
         localStorage.setItem("dreamweaver_user", JSON.stringify(userData));
         localStorage.setItem("dreamweaver_remember", "true");
       }
@@ -46,7 +52,7 @@ export const useAuth = () => {
       setUser(userData);
       setIsLoading(false);
       // Store user in localStorage for session persistence only if remember me is checked
-      if (rememberMe) {
+      if (rememberMeRef.current) {
         localStorage.setItem("dreamweaver_user", JSON.stringify(userData));
         localStorage.setItem("dreamweaver_remember", "true");
       }
