@@ -47,7 +47,10 @@ const Friends = ({ user, onLogin }) => {
     if (!user || user.isGuest) return;
 
     const handleStorageChange = (e) => {
-      if (e.key === 'dreamweaver_friend_requests' && e.newValue !== e.oldValue) {
+      if (
+        e.key === "dreamweaver_friend_requests" &&
+        e.newValue !== e.oldValue
+      ) {
         console.log("Friend requests updated in localStorage, refreshing...");
         // Small delay to ensure the change is fully persisted
         setTimeout(() => {
@@ -56,8 +59,8 @@ const Friends = ({ user, onLogin }) => {
       }
     };
 
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
   }, [user]); // Real-time search with debouncing
   useEffect(() => {
     if (!showAddFriend || !searchUsername.trim()) {
