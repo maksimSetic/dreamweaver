@@ -28,7 +28,7 @@ const Friends = ({ user, onLogin }) => {
     }
   }, [user]);
 
-  // Auto-refresh friends data every 10 seconds for real-time updates (less aggressive)
+  // Auto-refresh friends data every 3 seconds for more real-time updates
   useEffect(() => {
     if (!user || user.isGuest) return;
 
@@ -37,10 +37,28 @@ const Friends = ({ user, onLogin }) => {
       if (!isLoading) {
         loadFriendsData();
       }
-    }, 10000); // Refresh every 10 seconds (less frequent)
+    }, 3000); // Refresh every 3 seconds for faster updates
 
     return () => clearInterval(refreshInterval);
-  }, [user, isLoading]); // Real-time search with debouncing
+  }, [user, isLoading]);
+
+  // Listen for localStorage changes to detect friend requests from other tabs/sessions
+  useEffect(() => {
+    if (!user || user.isGuest) return;
+
+    const handleStorageChange = (e) => {
+      if (e.key === 'dreamweaver_friend_requests' && e.newValue !== e.oldValue) {
+        console.log("Friend requests updated in localStorage, refreshing...");
+        // Small delay to ensure the change is fully persisted
+        setTimeout(() => {
+          loadFriendsData();
+        }, 500);
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, [user]); // Real-time search with debouncing
   useEffect(() => {
     if (!showAddFriend || !searchUsername.trim()) {
       setSearchResults([]);
@@ -131,6 +149,9 @@ const Friends = ({ user, onLogin }) => {
 
     setIsLoading(true);
     try {
+      // Force reload persisted data to get latest changes
+      friendsAPI.reloadPersistedData();
+
       const [friendsData, requestsData, sentData] = await Promise.all([
         friendsAPI.getFriends(user.id),
         friendsAPI.getFriendRequests(user.id),

@@ -106,6 +106,12 @@ class FriendsAPI {
     }
   }
 
+  // Force reload persisted data from localStorage
+  reloadPersistedData() {
+    console.log("Force reloading persisted data from localStorage...");
+    this.loadPersistedData();
+  }
+
   // Load users from server
   async loadServerUsers() {
     if (this.socket && this.isConnected) {
