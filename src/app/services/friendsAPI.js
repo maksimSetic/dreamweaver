@@ -57,22 +57,26 @@ class FriendsAPI {
   loadPersistedData() {
     try {
       // Load friendships
-      const friendshipsData = localStorage.getItem('dreamweaver_friendships');
+      const friendshipsData = localStorage.getItem("dreamweaver_friendships");
       if (friendshipsData) {
         const friendshipsObj = JSON.parse(friendshipsData);
-        this.mockFriendships = new Map(Object.entries(friendshipsObj).map(([k, v]) => [parseInt(k), v]));
+        this.mockFriendships = new Map(
+          Object.entries(friendshipsObj).map(([k, v]) => [parseInt(k), v])
+        );
       }
 
       // Load friend requests
-      const requestsData = localStorage.getItem('dreamweaver_friend_requests');
+      const requestsData = localStorage.getItem("dreamweaver_friend_requests");
       if (requestsData) {
         const requestsObj = JSON.parse(requestsData);
-        this.mockFriendRequests = new Map(Object.entries(requestsObj).map(([k, v]) => [parseInt(k), v]));
+        this.mockFriendRequests = new Map(
+          Object.entries(requestsObj).map(([k, v]) => [parseInt(k), v])
+        );
       }
 
       console.log("Loaded persisted data:", {
         friendships: this.mockFriendships,
-        requests: this.mockFriendRequests
+        requests: this.mockFriendRequests,
       });
     } catch (error) {
       console.error("Error loading persisted data:", error);
@@ -84,11 +88,17 @@ class FriendsAPI {
     try {
       // Save friendships
       const friendshipsObj = Object.fromEntries(this.mockFriendships);
-      localStorage.setItem('dreamweaver_friendships', JSON.stringify(friendshipsObj));
+      localStorage.setItem(
+        "dreamweaver_friendships",
+        JSON.stringify(friendshipsObj)
+      );
 
       // Save friend requests
       const requestsObj = Object.fromEntries(this.mockFriendRequests);
-      localStorage.setItem('dreamweaver_friend_requests', JSON.stringify(requestsObj));
+      localStorage.setItem(
+        "dreamweaver_friend_requests",
+        JSON.stringify(requestsObj)
+      );
 
       console.log("Saved persisted data to localStorage");
     } catch (error) {
@@ -241,15 +251,20 @@ class FriendsAPI {
     await this.delay(300);
 
     // Ensure ID is consistent
-    const userIdNum = typeof userId === 'string' ? parseInt(userId) : userId;
+    const userIdNum = typeof userId === "string" ? parseInt(userId) : userId;
 
-    console.log(`Getting friend requests for user ${userIdNum} (original: ${userId})`);
+    console.log(
+      `Getting friend requests for user ${userIdNum} (original: ${userId})`
+    );
     console.log("User ID type:", typeof userIdNum);
     console.log("Current mockFriendRequests:", this.mockFriendRequests);
 
     const requests = [];
     for (let [senderId, receiverIds] of this.mockFriendRequests.entries()) {
-      console.log(`Checking sender ${senderId} (type: ${typeof senderId}) with receivers:`, receiverIds);
+      console.log(
+        `Checking sender ${senderId} (type: ${typeof senderId}) with receivers:`,
+        receiverIds
+      );
       if (receiverIds.includes(userIdNum)) {
         console.log(`Found request from ${senderId} to ${userIdNum}`);
         const sender = this.serverUsers.find((u) => u.id === senderId);
@@ -300,11 +315,20 @@ class FriendsAPI {
     await this.delay(500);
 
     // Ensure IDs are consistent (convert to numbers if they're strings)
-    const senderIdNum = typeof senderId === 'string' ? parseInt(senderId) : senderId;
-    const receiverIdNum = typeof receiverId === 'string' ? parseInt(receiverId) : receiverId;
+    const senderIdNum =
+      typeof senderId === "string" ? parseInt(senderId) : senderId;
+    const receiverIdNum =
+      typeof receiverId === "string" ? parseInt(receiverId) : receiverId;
 
-    console.log(`Sending friend request from ${senderIdNum} to ${receiverIdNum}`);
-    console.log("Sender ID type:", typeof senderIdNum, "Receiver ID type:", typeof receiverIdNum);
+    console.log(
+      `Sending friend request from ${senderIdNum} to ${receiverIdNum}`
+    );
+    console.log(
+      "Sender ID type:",
+      typeof senderIdNum,
+      "Receiver ID type:",
+      typeof receiverIdNum
+    );
     console.log("Current mockFriendRequests:", this.mockFriendRequests);
 
     if (
@@ -452,7 +476,7 @@ class FriendsAPI {
       serverUsers: this.serverUsers,
       mockFriendships: this.mockFriendships,
       mockFriendRequests: this.mockFriendRequests,
-      isConnected: this.isConnected
+      isConnected: this.isConnected,
     };
   }
 
@@ -460,8 +484,8 @@ class FriendsAPI {
   clearAllData() {
     this.mockFriendships.clear();
     this.mockFriendRequests.clear();
-    localStorage.removeItem('dreamweaver_friendships');
-    localStorage.removeItem('dreamweaver_friend_requests');
+    localStorage.removeItem("dreamweaver_friendships");
+    localStorage.removeItem("dreamweaver_friend_requests");
     console.log("All friendship data cleared!");
   }
 }

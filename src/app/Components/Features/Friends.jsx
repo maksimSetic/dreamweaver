@@ -75,10 +75,10 @@ const Friends = ({ user, onLogin }) => {
     console.log("Current friends:", friends);
     console.log("Current friend requests:", friendRequests);
     console.log("Current sent requests:", sentRequests);
-    
+
     // Check friend requests state in API
     if (user?.id) {
-      friendsAPI.getFriendRequests(user.id).then(requests => {
+      friendsAPI.getFriendRequests(user.id).then((requests) => {
         console.log("Fresh friend requests from API:", requests);
       });
     }
@@ -109,7 +109,11 @@ const Friends = ({ user, onLogin }) => {
 
   // Clear all friendship data
   const clearAllData = () => {
-    if (confirm("Are you sure you want to clear all friendship data? This will remove all friends and requests.")) {
+    if (
+      confirm(
+        "Are you sure you want to clear all friendship data? This will remove all friends and requests."
+      )
+    ) {
       friendsAPI.clearAllData();
       setFriends([]);
       setFriendRequests([]);
