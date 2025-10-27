@@ -78,17 +78,8 @@ export const SocketProvider = ({ children, onMatchFound }) => {
     }
   }, [messages]);
 
-  // Auto-navigate to chat when match is found (backup navigation)
-  useEffect(() => {
-    if (isMatched && matchData && !chatClosed) {
-      console.log("Match detected, ensuring navigation to chat");
-      if (onMatchFound) {
-        setTimeout(() => {
-          onMatchFound();
-        }, 200);
-      }
-    }
-  }, [isMatched, matchData, chatClosed, onMatchFound]);
+  // Note: Navigation to chat is handled directly in the "match-found" event listener below
+  // No need for additional useEffect that forces navigation on state changes
 
   useEffect(() => {
     // Initialize socket connection
@@ -256,6 +247,33 @@ export const SocketProvider = ({ children, onMatchFound }) => {
     }
   };
 
+  const cleanupOnLogout = () => {
+    // Disconnect socket and clear all state when user logs out
+    if (socket) {
+      if (isQueuing) {
+        socket.emit("cancel-queue");
+      }
+      socket.disconnect();
+    }
+
+    // Reset all state
+    setIsConnected(false);
+    setIsQueuing(false);
+    setIsMatched(false);
+    setMatchData(null);
+    setMessages([]);
+    setPartnerDisconnected(false);
+    setChatClosed(false);
+
+    // Clear localStorage
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("dreamweaver-match-state");
+      localStorage.removeItem("dreamweaver-messages");
+    }
+
+    console.log("SocketContext cleaned up for logout");
+  };
+
   const startNewMatch = () => {
     setIsMatched(false);
     setMatchData(null);
@@ -292,6 +310,7 @@ export const SocketProvider = ({ children, onMatchFound }) => {
     startNewMatch,
     closeChat,
     reopenChat,
+    cleanupOnLogout,
   };
 
   return (

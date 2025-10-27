@@ -3,11 +3,10 @@ import { useState, useEffect } from "react";
 import Sidebar from "./Components/Sidebar";
 import MainContent from "./Components/MainContent";
 import AuthForm from "./Components/AuthForm";
-import UserProfile from "./Components/UserProfile";
 import { calculateFullChart } from "./utils/zodiacCalculations";
 import { User, AuthData } from "./types/auth";
 import { useAuth } from "./hooks/useAuth";
-import { SocketProvider } from "./contexts/SocketContext";
+import { SocketProvider, useSocket } from "./contexts/SocketContext";
 
 // Zodiac signs array for random selection
 const zodiacSigns = [
@@ -72,7 +71,6 @@ export default function Home() {
   const [active, setActive] = useState("zodiac");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showAuth, setShowAuth] = useState(true); // Always show auth on load
-  const [showProfile, setShowProfile] = useState(false);
 
   // Use the new authentication hook
   const { user, setUser, rememberMe, register, login, logout, debugGetUsers } =
@@ -140,20 +138,6 @@ export default function Home() {
   const handleLogout = () => {
     logout();
     setActive("zodiac");
-    setShowProfile(false);
-  };
-
-  const handleProfileOpen = () => {
-    setShowProfile(true);
-  };
-
-  const handleProfileEdit = () => {
-    setShowProfile(false);
-    setShowAuth(true);
-  };
-
-  const handleProfileClose = () => {
-    setShowProfile(false);
   };
 
   // Debug function - you can call this from browser console
@@ -179,24 +163,17 @@ export default function Home() {
     );
   }
 
-  // Show user profile if requested
-  if (showProfile) {
-    return (
-      <UserProfile
-        userProfile={user}
-        onEdit={handleProfileEdit}
-        onClose={handleProfileClose}
-      />
-    );
-  }
+  // Create a component that has access to SocketContext
+  const AppContent = () => {
+    const { cleanupOnLogout } = useSocket();
 
-  return (
-    <SocketProvider
-      onMatchFound={() => {
-        console.log("onMatchFound callback triggered, navigating to chat");
-        setActive("chat");
-      }}
-    >
+    const handleLogoutWithCleanup = () => {
+      cleanupOnLogout(); // Clean up socket state first
+      logout(); // Then handle auth logout
+      setActive("zodiac");
+    };
+
+    return (
       <div className="flex flex-col lg:flex-row h-screen bg-gray-50">
         <Sidebar
           active={active}
@@ -205,8 +182,7 @@ export default function Home() {
           setSidebarOpen={setSidebarOpen}
           user={user}
           onLogin={() => setShowAuth(true)}
-          onLogout={handleLogout}
-          onProfileOpen={handleProfileOpen}
+          onLogout={handleLogoutWithCleanup}
         />
         <MainContent
           active={active}
@@ -215,6 +191,17 @@ export default function Home() {
           onLogin={() => setShowAuth(true)}
         />
       </div>
+    );
+  };
+
+  return (
+    <SocketProvider
+      onMatchFound={() => {
+        console.log("onMatchFound callback triggered, navigating to chat");
+        setActive("chat");
+      }}
+    >
+      <AppContent />
     </SocketProvider>
   );
 }

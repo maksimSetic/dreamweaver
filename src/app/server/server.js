@@ -80,6 +80,11 @@ io.on("connection", (socket) => {
     console.log(
       `User ${user.name} (${user.sign}) joined queue. Queue length: ${userQueue.length}`
     );
+    console.log(
+      "Current queue:",
+      userQueue.map((u) => ({ name: u.name, id: u.id, socketId: u.socketId }))
+    );
+    console.log("User sockets map size:", userSockets.size);
 
     // Try to find a match
     findMatch(user);
@@ -185,10 +190,17 @@ function findMatch(newUser) {
     (user) => user.id !== newUser.id && user.socketId !== newUser.socketId
   );
 
+  console.log(`Finding match for ${newUser.name}:`);
+  console.log(
+    "Potential matches:",
+    potentialMatches.map((u) => ({ name: u.name, id: u.id }))
+  );
+
   if (potentialMatches.length > 0) {
     // For now, just match with the first person in queue
     // Later we can add compatibility-based matching
     const matchedUser = potentialMatches[0];
+    console.log(`Matching ${newUser.name} with ${matchedUser.name}`);
 
     // Remove both users from queue
     userQueue = userQueue.filter(

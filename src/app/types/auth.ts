@@ -40,6 +40,7 @@ export interface UserProfileProps {
   userProfile: User | null;
   onEdit: () => void;
   onClose: () => void;
+  isEmbedded?: boolean;
 }
 
 export interface SidebarProps {

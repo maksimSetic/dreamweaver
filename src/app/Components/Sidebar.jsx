@@ -15,14 +15,9 @@ export default function Sidebar({
   user,
   onLogin,
   onLogout,
-  onProfileOpen,
 }) {
   const handleProfileOrStorytellerClick = () => {
-    if (user) {
-      onProfileOpen?.();
-    } else {
-      setActive("storyteller");
-    }
+    setActive("storyteller");
   };
 
   return (
