@@ -5,7 +5,6 @@ import { AuthFormProps } from "../types/auth";
 const AuthForm: React.FC<AuthFormProps> = ({
   onAuth,
   onCancel,
-  existingUser,
 }) => {
   const [isLogin, setIsLogin] = useState(true); // Default to sign-in instead of sign-up
   const [rememberMe, setRememberMe] = useState(false);

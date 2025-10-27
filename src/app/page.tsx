@@ -135,11 +135,6 @@ export default function Home() {
     setShowAuth(false);
   };
 
-  const handleLogout = () => {
-    logout();
-    setActive("zodiac");
-  };
-
   // Debug function - you can call this from browser console
   if (typeof window !== "undefined") {
     (

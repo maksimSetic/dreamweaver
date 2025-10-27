@@ -178,7 +178,7 @@ export const SocketProvider = ({ children, onMatchFound }) => {
     return () => {
       socketInstance.disconnect();
     };
-  }, []);
+  }, [onMatchFound]);
 
   const joinQueue = (userData) => {
     if (socket) {
