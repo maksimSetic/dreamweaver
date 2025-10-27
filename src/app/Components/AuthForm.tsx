@@ -7,7 +7,7 @@ const AuthForm: React.FC<AuthFormProps> = ({
   onCancel,
   existingUser,
 }) => {
-  const [isLogin, setIsLogin] = useState(!!existingUser);
+  const [isLogin, setIsLogin] = useState(true); // Default to sign-in instead of sign-up
   const [rememberMe, setRememberMe] = useState(false);
   const [formData, setFormData] = useState({
     username: "",

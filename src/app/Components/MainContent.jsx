@@ -8,6 +8,7 @@ import "swiper/css/pagination";
 import ZodiacCompatibility from "../Components/Features/ZodiacCompatibility";
 import Notes from "../Components/Features/Notes";
 import MysticElements from "../Components/Features/MysticElements";
+import Friends from "../Components/Features/Friends";
 import UserProfile from "../Components/UserProfile";
 import { useSocket } from "../contexts/SocketContext";
 import EmojiPicker from "emoji-picker-react";
@@ -3754,6 +3755,11 @@ export default function MainContent({ active, user, onLogin, setActive }) {
           ) : (
             <AuthPrompt feature="Dreammaker" />
           )}
+        </div>
+      )}
+      {active === "friends" && (
+        <div>
+          <Friends user={user} onLogin={onLogin} />
         </div>
       )}
       {active === "notes" && (

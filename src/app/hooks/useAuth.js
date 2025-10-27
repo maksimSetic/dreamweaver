@@ -33,13 +33,14 @@ export const useAuth = () => {
       console.log("Registration successful:", userData);
       setUser(userData);
       setIsLoading(false);
-      // Store user in localStorage for session persistence
+
+      // Always store user in localStorage for session persistence
+      localStorage.setItem("dreamweaver_user", JSON.stringify(userData));
+      // Only set remember flag if explicitly checked
       if (rememberMeRef.current) {
-        localStorage.setItem("dreamweaver_user", JSON.stringify(userData));
         localStorage.setItem("dreamweaver_remember", "true");
       }
     });
-
     socketInstance.on("register-error", (error) => {
       console.error("Registration failed:", error.message);
       setIsLoading(false);
@@ -51,13 +52,14 @@ export const useAuth = () => {
       console.log("Login successful:", userData);
       setUser(userData);
       setIsLoading(false);
-      // Store user in localStorage for session persistence only if remember me is checked
+
+      // Always store user in localStorage for session persistence
+      localStorage.setItem("dreamweaver_user", JSON.stringify(userData));
+      // Only set remember flag if explicitly checked
       if (rememberMeRef.current) {
-        localStorage.setItem("dreamweaver_user", JSON.stringify(userData));
         localStorage.setItem("dreamweaver_remember", "true");
       }
     });
-
     socketInstance.on("login-error", (error) => {
       console.error("Login failed:", error.message);
       setIsLoading(false);
@@ -71,14 +73,17 @@ export const useAuth = () => {
 
     setSocket(socketInstance);
 
-    // Load user from localStorage on mount only if remember me was enabled
+    // Load user from localStorage on mount for session persistence
     const savedUser = localStorage.getItem("dreamweaver_user");
     const rememberFlag = localStorage.getItem("dreamweaver_remember");
 
-    if (savedUser && rememberFlag === "true") {
+    if (savedUser) {
       try {
         setUser(JSON.parse(savedUser));
-        setRememberMe(true);
+        // Set remember me flag if it was explicitly set
+        if (rememberFlag === "true") {
+          setRememberMe(true);
+        }
       } catch (error) {
         console.error("Error parsing saved user:", error);
         localStorage.removeItem("dreamweaver_user");

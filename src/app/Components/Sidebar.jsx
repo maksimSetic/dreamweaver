@@ -1,6 +1,7 @@
 const SIDEBAR_ITEMS = [
   { id: "chat", label: "Chat" },
   { id: "zodiac", label: "Zodiac Compatibility" },
+  { id: "friends", label: "Friends" },
   { id: "notes", label: "Notes" },
   { id: "dreammaker", label: "Dreammaker" },
   { id: "cardgame", label: "Mystic Elements" },
