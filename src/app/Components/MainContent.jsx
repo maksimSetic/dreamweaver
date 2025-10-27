@@ -10,6 +10,7 @@ import Notes from "../Components/Features/Notes";
 import MysticElements from "../Components/Features/MysticElements";
 import UserProfile from "../Components/UserProfile";
 import { useSocket } from "../contexts/SocketContext";
+import EmojiPicker from "emoji-picker-react";
 
 // Zodiac symbols mapping (needed for chat interface)
 const zodiacSymbols = {
@@ -268,6 +269,16 @@ export default function MainContent({ active, user, onLogin, setActive }) {
   const [messageInput, setMessageInput] = useState("");
   const [usedQuotes, setUsedQuotes] = useState({});
 
+  // Emoji picker state
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const emojiPickerRef = useRef(null);
+
+  // Chat scroll state
+  const [showNewMessageIndicator, setShowNewMessageIndicator] = useState(false);
+  const [newMessageCount, setNewMessageCount] = useState(0);
+  const chatContainerRef = useRef(null);
+  const [isUserAtBottom, setIsUserAtBottom] = useState(true);
+
   // Quote modal state
   const [showQuoteModal, setShowQuoteModal] = useState(false);
   const [selectedCharacter, setSelectedCharacter] = useState(null);
@@ -376,6 +387,52 @@ export default function MainContent({ active, user, onLogin, setActive }) {
       setCurrentMatchId(null);
     }
   }, [isMatched, matchData]);
+
+  // Close emoji picker when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        emojiPickerRef.current &&
+        !emojiPickerRef.current.contains(event.target)
+      ) {
+        setShowEmojiPicker(false);
+      }
+    };
+
+    if (showEmojiPicker) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }
+  }, [showEmojiPicker]);
+
+  // Handle auto-scroll and new message indicator when messages change
+  useEffect(() => {
+    if (messages.length > 0) {
+      // Small delay to ensure DOM has updated
+      setTimeout(() => {
+        if (isUserAtBottom) {
+          // User was at bottom, auto-scroll to new message
+          scrollToBottom();
+        } else {
+          // User was scrolled up, show new message indicator
+          setNewMessageCount((prev) => prev + 1);
+          setShowNewMessageIndicator(true);
+        }
+      }, 100);
+    }
+  }, [messages.length]);
+
+  // Initial scroll to bottom when chat opens
+  useEffect(() => {
+    if (active === "chat" && messages.length > 0) {
+      setTimeout(() => {
+        scrollToBottom();
+        setIsUserAtBottom(true);
+      }, 200);
+    }
+  }, [active, matchData]);
 
   // Character data for quote functionality (simplified version)
   const characterData = {
@@ -2941,6 +2998,51 @@ export default function MainContent({ active, user, onLogin, setActive }) {
       setSelectedQuote("");
     }
   };
+
+  // Emoji picker handlers
+  const handleEmojiClick = (emojiData) => {
+    setMessageInput((prev) => prev + emojiData.emoji);
+    setShowEmojiPicker(false);
+  };
+
+  const toggleEmojiPicker = () => {
+    setShowEmojiPicker((prev) => !prev);
+  };
+
+  // Chat scroll handlers
+  const scrollToBottom = () => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop =
+        chatContainerRef.current.scrollHeight;
+    }
+  };
+
+  const checkIfUserAtBottom = () => {
+    if (chatContainerRef.current) {
+      const { scrollTop, scrollHeight, clientHeight } =
+        chatContainerRef.current;
+      const threshold = 50; // pixels from bottom to consider "at bottom"
+      return scrollHeight - scrollTop - clientHeight < threshold;
+    }
+    return true;
+  };
+
+  const handleScroll = () => {
+    const atBottom = checkIfUserAtBottom();
+    setIsUserAtBottom(atBottom);
+
+    if (atBottom && showNewMessageIndicator) {
+      setShowNewMessageIndicator(false);
+      setNewMessageCount(0);
+    }
+  };
+
+  const handleNewMessageIndicatorClick = () => {
+    scrollToBottom();
+    setShowNewMessageIndicator(false);
+    setNewMessageCount(0);
+  };
+
   const AuthPrompt = ({ feature }) => (
     <div className="flex flex-col items-center justify-center min-h-[60vh] bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl p-8">
       <div className="text-center max-w-md">
@@ -3030,39 +3132,81 @@ export default function MainContent({ active, user, onLogin, setActive }) {
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ delay: 0.2 }}
-                      className="bg-white/5 rounded-xl p-4 mb-4 h-96 overflow-y-auto space-y-3"
+                      className="relative"
                     >
-                      {messages.map((message) => (
-                        <motion.div
-                          key={message.id}
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          className={`flex ${
-                            message.type === "sent"
-                              ? "justify-end"
-                              : message.type === "system"
-                              ? "justify-center"
-                              : "justify-start"
-                          }`}
-                        >
-                          <div
-                            className={`max-w-xs sm:max-w-md p-3 rounded-lg ${
+                      <div
+                        ref={chatContainerRef}
+                        onScroll={handleScroll}
+                        className="bg-white/5 rounded-xl p-4 mb-4 h-96 overflow-y-auto space-y-3"
+                      >
+                        {messages.map((message) => (
+                          <motion.div
+                            key={message.id}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className={`flex ${
                               message.type === "sent"
-                                ? "bg-gradient-to-r from-pink-500 to-purple-600 text-white"
+                                ? "justify-end"
                                 : message.type === "system"
-                                ? "bg-yellow-500/20 text-yellow-200 text-center text-sm"
-                                : "bg-white/10 text-white"
+                                ? "justify-center"
+                                : "justify-start"
                             }`}
                           >
-                            <p className="text-sm sm:text-base">
-                              {message.text}
-                            </p>
-                            <p className="text-xs opacity-70 mt-1">
-                              {message.timestamp}
-                            </p>
-                          </div>
-                        </motion.div>
-                      ))}
+                            <div
+                              className={`max-w-xs sm:max-w-md p-3 rounded-lg ${
+                                message.type === "sent"
+                                  ? "bg-gradient-to-r from-pink-500 to-purple-600 text-white"
+                                  : message.type === "system"
+                                  ? "bg-yellow-500/20 text-yellow-200 text-center text-sm"
+                                  : "bg-white/10 text-white"
+                              }`}
+                            >
+                              <p className="text-sm sm:text-base">
+                                {message.text}
+                              </p>
+                              <p className="text-xs opacity-70 mt-1">
+                                {message.timestamp}
+                              </p>
+                            </div>
+                          </motion.div>
+                        ))}
+                      </div>
+
+                      {/* New Message Indicator */}
+                      <AnimatePresence>
+                        {showNewMessageIndicator && (
+                          <motion.button
+                            initial={{ opacity: 0, y: 20, scale: 0.8 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: 20, scale: 0.8 }}
+                            transition={{
+                              type: "spring",
+                              stiffness: 300,
+                              damping: 25,
+                            }}
+                            onClick={handleNewMessageIndicatorClick}
+                            className="absolute bottom-6 right-6 bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white px-4 py-2 rounded-full shadow-lg flex items-center space-x-2 transition-all duration-200 z-10"
+                          >
+                            <span className="text-sm font-medium">
+                              {newMessageCount} new message
+                              {newMessageCount > 1 ? "s" : ""}
+                            </span>
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M19 14l-7 7m0 0l-7-7m7 7V3"
+                              />
+                            </svg>
+                          </motion.button>
+                        )}
+                      </AnimatePresence>
                     </motion.div>
 
                     {/* Your Zodiac Characters Section */}
@@ -3259,33 +3403,77 @@ export default function MainContent({ active, user, onLogin, setActive }) {
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.3 }}
-                      className="flex gap-2"
+                      className="relative"
                     >
-                      <input
-                        type="text"
-                        value={messageInput}
-                        onChange={(e) => setMessageInput(e.target.value)}
-                        onKeyPress={(e) => {
-                          if (e.key === "Enter" && messageInput.trim()) {
-                            sendMessage(messageInput.trim());
-                            setMessageInput("");
-                          }
-                        }}
-                        placeholder="Type your message..."
-                        className="flex-1 px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-400"
-                      />
-                      <button
-                        onClick={() => {
-                          if (messageInput.trim()) {
-                            sendMessage(messageInput.trim());
-                            setMessageInput("");
-                          }
-                        }}
-                        disabled={!messageInput.trim()}
-                        className="px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-all duration-200"
-                      >
-                        Send
-                      </button>
+                      {/* Emoji Picker */}
+                      <AnimatePresence>
+                        {showEmojiPicker && (
+                          <motion.div
+                            ref={emojiPickerRef}
+                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                            transition={{ duration: 0.2 }}
+                            className="absolute bottom-full mb-2 left-0 z-50"
+                          >
+                            <EmojiPicker
+                              onEmojiClick={handleEmojiClick}
+                              theme="dark"
+                              width={300}
+                              height={400}
+                              previewConfig={{
+                                showPreview: false,
+                              }}
+                              searchDisabled={false}
+                              skinTonesDisabled={false}
+                              autoFocusSearch={false}
+                            />
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+
+                      <div className="flex gap-2">
+                        <div className="flex-1 relative flex">
+                          <input
+                            type="text"
+                            value={messageInput}
+                            onChange={(e) => setMessageInput(e.target.value)}
+                            onKeyPress={(e) => {
+                              if (e.key === "Enter" && messageInput.trim()) {
+                                sendMessage(messageInput.trim());
+                                setMessageInput("");
+                                setIsUserAtBottom(true);
+                                setShowNewMessageIndicator(false);
+                                setNewMessageCount(0);
+                              }
+                            }}
+                            placeholder="Type your message..."
+                            className="flex-1 px-4 py-3 pr-12 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-400"
+                          />
+                          <button
+                            onClick={toggleEmojiPicker}
+                            className="absolute right-2 top-1/2 transform -translate-y-1/2 p-2 hover:bg-white/10 rounded-lg transition-colors"
+                            type="button"
+                          >
+                            <span className="text-xl">😀</span>
+                          </button>
+                        </div>
+                        <button
+                          onClick={() => {
+                            if (messageInput.trim()) {
+                              sendMessage(messageInput.trim());
+                              setMessageInput("");
+                              setIsUserAtBottom(true);
+                              setShowNewMessageIndicator(false);
+                              setNewMessageCount(0);
+                            }
+                          }}
+                          disabled={!messageInput.trim()}
+                          className="px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-all duration-200"
+                        >
+                          Send
+                        </button>
+                      </div>
                     </motion.div>
                   </div>
                 </div>
