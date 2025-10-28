@@ -70,6 +70,25 @@ class DatabaseManager {
       )
     `;
 
+    // Create friendships table
+    const createFriendshipsTable = `
+      CREATE TABLE IF NOT EXISTS friendships (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user1_id INTEGER NOT NULL,
+        user2_id INTEGER NOT NULL,
+        user1_username TEXT NOT NULL,
+        user2_username TEXT NOT NULL,
+        status TEXT DEFAULT 'pending',
+        requester_id INTEGER NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        accepted_at DATETIME,
+        FOREIGN KEY (user1_id) REFERENCES users (id),
+        FOREIGN KEY (user2_id) REFERENCES users (id),
+        FOREIGN KEY (requester_id) REFERENCES users (id),
+        UNIQUE(user1_id, user2_id)
+      )
+    `;
+
     this.db.run(createUsersTable, (err) => {
       if (err) {
         console.error("Error creating users table:", err.message);
@@ -91,6 +110,14 @@ class DatabaseManager {
         console.error("Error creating messages table:", err.message);
       } else {
         console.log("Chat messages table initialized");
+      }
+    });
+
+    this.db.run(createFriendshipsTable, (err) => {
+      if (err) {
+        console.error("Error creating friendships table:", err.message);
+      } else {
+        console.log("Friendships table initialized");
       }
     });
   }
@@ -220,6 +247,38 @@ class DatabaseManager {
           }
         }
       );
+    });
+  }
+
+  // Get user by username
+  async getUserByUsername(username) {
+    return new Promise((resolve, reject) => {
+      const selectUser = `
+        SELECT id, username, sun_sign, moon_sign, rising_sign, created_at
+        FROM users 
+        WHERE username = ?
+      `;
+
+      this.db.get(selectUser, [username], (err, row) => {
+        if (err) {
+          reject(new Error("Database error: " + err.message));
+          return;
+        }
+
+        if (!row) {
+          reject(new Error("User not found"));
+          return;
+        }
+
+        resolve({
+          id: row.id,
+          username: row.username,
+          sun_sign: row.sun_sign,
+          moon_sign: row.moon_sign,
+          rising_sign: row.rising_sign,
+          created_at: row.created_at,
+        });
+      });
     });
   }
 
@@ -453,6 +512,262 @@ class DatabaseManager {
       } else {
         console.log("Database connection closed");
       }
+    });
+  }
+
+  // Friends methods
+  async sendFriendInvitation(fromUserId, toUsername) {
+    return new Promise((resolve, reject) => {
+      // First check if the target user exists
+      const findUserQuery = `SELECT id, username, sun_sign FROM users WHERE username = ?`;
+
+      this.db.get(findUserQuery, [toUsername], (err, toUser) => {
+        if (err) {
+          reject(new Error("Database error: " + err.message));
+          return;
+        }
+
+        if (!toUser) {
+          reject(new Error("User not found"));
+          return;
+        }
+
+        if (toUser.id === fromUserId) {
+          reject(new Error("Cannot send friend invitation to yourself"));
+          return;
+        }
+
+        // Check if friendship already exists
+        const checkFriendshipQuery = `
+          SELECT * FROM friendships 
+          WHERE (user1_id = ? AND user2_id = ?) OR (user1_id = ? AND user2_id = ?)
+        `;
+
+        this.db.get(
+          checkFriendshipQuery,
+          [fromUserId, toUser.id, toUser.id, fromUserId],
+          (err, existingFriendship) => {
+            if (err) {
+              reject(new Error("Database error: " + err.message));
+              return;
+            }
+
+            if (existingFriendship) {
+              if (existingFriendship.status === "accepted") {
+                reject(new Error("You are already friends"));
+              } else {
+                reject(new Error("Friend invitation already sent"));
+              }
+              return;
+            }
+
+            // Get the sender's info
+            const getSenderQuery = `SELECT username, sun_sign FROM users WHERE id = ?`;
+            this.db.get(getSenderQuery, [fromUserId], (err, fromUser) => {
+              if (err) {
+                reject(new Error("Database error: " + err.message));
+                return;
+              }
+
+              // Create friendship record
+              const insertFriendshipQuery = `
+              INSERT INTO friendships (user1_id, user2_id, user1_username, user2_username, requester_id, status)
+              VALUES (?, ?, ?, ?, ?, 'pending')
+            `;
+
+              this.db.run(
+                insertFriendshipQuery,
+                [
+                  fromUserId,
+                  toUser.id,
+                  fromUser.username,
+                  toUser.username,
+                  fromUserId,
+                ],
+                function (err) {
+                  if (err) {
+                    reject(
+                      new Error(
+                        "Failed to send friend invitation: " + err.message
+                      )
+                    );
+                  } else {
+                    resolve({
+                      id: this.lastID,
+                      fromUsername: fromUser.username,
+                      fromSign: fromUser.sun_sign,
+                      toUsername: toUser.username,
+                      toSign: toUser.sun_sign,
+                    });
+                  }
+                }
+              );
+            });
+          }
+        );
+      });
+    });
+  }
+
+  async getFriendsData(userId) {
+    return new Promise((resolve, reject) => {
+      // Get accepted friends
+      const friendsQuery = `
+        SELECT 
+          f.*,
+          CASE 
+            WHEN f.user1_id = ? THEN u2.username 
+            ELSE u1.username 
+          END as friend_username,
+          CASE 
+            WHEN f.user1_id = ? THEN u2.sun_sign 
+            ELSE u1.sun_sign 
+          END as friend_sign
+        FROM friendships f
+        JOIN users u1 ON f.user1_id = u1.id
+        JOIN users u2 ON f.user2_id = u2.id
+        WHERE (f.user1_id = ? OR f.user2_id = ?) AND f.status = 'accepted'
+      `;
+
+      // Get pending invitations received
+      const pendingReceivedQuery = `
+        SELECT f.*, u.username as fromUsername, u.sun_sign as fromSign
+        FROM friendships f
+        JOIN users u ON f.requester_id = u.id
+        WHERE f.user2_id = ? AND f.status = 'pending' AND f.requester_id != ?
+      `;
+
+      // Get pending invitations sent
+      const pendingSentQuery = `
+        SELECT f.*, u.username as toUsername, u.sun_sign as toSign
+        FROM friendships f
+        JOIN users u ON (CASE WHEN f.user1_id = f.requester_id THEN f.user2_id ELSE f.user1_id END) = u.id
+        WHERE f.requester_id = ? AND f.status = 'pending'
+      `;
+
+      this.db.all(
+        friendsQuery,
+        [userId, userId, userId, userId],
+        (err, friends) => {
+          if (err) {
+            reject(new Error("Error fetching friends: " + err.message));
+            return;
+          }
+
+          this.db.all(
+            pendingReceivedQuery,
+            [userId, userId],
+            (err, pendingReceived) => {
+              if (err) {
+                reject(
+                  new Error(
+                    "Error fetching pending invitations: " + err.message
+                  )
+                );
+                return;
+              }
+
+              this.db.all(pendingSentQuery, [userId], (err, pendingSent) => {
+                if (err) {
+                  reject(
+                    new Error("Error fetching sent invitations: " + err.message)
+                  );
+                  return;
+                }
+
+                resolve({
+                  friends: friends.map((f) => ({
+                    username: f.friend_username,
+                    sign: f.friend_sign,
+                    isOnline: false, // TODO: Implement online status
+                  })),
+                  pendingInvitations: pendingReceived.map((p) => ({
+                    fromUsername: p.fromUsername,
+                    fromSign: p.fromSign,
+                  })),
+                  sentInvitations: pendingSent.map((s) => ({
+                    toUsername: s.toUsername,
+                    toSign: s.toSign,
+                  })),
+                });
+              });
+            }
+          );
+        }
+      );
+    });
+  }
+
+  async acceptFriendInvitation(userId, fromUsername) {
+    return new Promise((resolve, reject) => {
+      // Find the pending friendship
+      const findPendingQuery = `
+        SELECT f.*, u.id as from_user_id, u.sun_sign as from_sign
+        FROM friendships f
+        JOIN users u ON f.requester_id = u.id
+        WHERE f.user2_id = ? AND u.username = ? AND f.status = 'pending'
+      `;
+
+      this.db.get(
+        findPendingQuery,
+        [userId, fromUsername],
+        (err, friendship) => {
+          if (err) {
+            reject(new Error("Database error: " + err.message));
+            return;
+          }
+
+          if (!friendship) {
+            reject(new Error("Friend invitation not found"));
+            return;
+          }
+
+          // Update status to accepted
+          const updateQuery = `
+          UPDATE friendships 
+          SET status = 'accepted', accepted_at = CURRENT_TIMESTAMP 
+          WHERE id = ?
+        `;
+
+          this.db.run(updateQuery, [friendship.id], (err) => {
+            if (err) {
+              reject(
+                new Error("Failed to accept friend invitation: " + err.message)
+              );
+            } else {
+              resolve({
+                friend: {
+                  username: fromUsername,
+                  sign: friendship.from_sign,
+                  isOnline: false,
+                },
+              });
+            }
+          });
+        }
+      );
+    });
+  }
+
+  async declineFriendInvitation(userId, fromUsername) {
+    return new Promise((resolve, reject) => {
+      // Find and delete the pending friendship
+      const deleteQuery = `
+        DELETE FROM friendships 
+        WHERE user2_id = ? AND requester_id = (SELECT id FROM users WHERE username = ?) AND status = 'pending'
+      `;
+
+      this.db.run(deleteQuery, [userId, fromUsername], function (err) {
+        if (err) {
+          reject(
+            new Error("Failed to decline friend invitation: " + err.message)
+          );
+        } else if (this.changes === 0) {
+          reject(new Error("Friend invitation not found"));
+        } else {
+          resolve({ fromUsername });
+        }
+      });
     });
   }
 }

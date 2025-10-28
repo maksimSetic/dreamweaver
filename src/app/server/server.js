@@ -294,6 +294,385 @@ io.on("connection", (socket) => {
     }
   });
 
+  // Handle friend invitation
+  socket.on("send-friend-invitation", async (data) => {
+    const { toUsername } = data;
+
+    if (!socket.isRegistered) {
+      socket.emit("friend-invitation-error", {
+        message: "User not registered",
+      });
+      return;
+    }
+
+    try {
+      const result = await db.sendFriendInvitation(socket.userId, toUsername);
+      socket.emit("friend-invitation-sent", {
+        toUsername: result.toUsername,
+        toSign: result.toSign,
+      });
+
+      // Notify the target user if they're online
+      const targetUserSocket = [...registeredUsers.entries()].find(
+        ([socketId, userData]) => userData.username === toUsername
+      );
+
+      if (targetUserSocket) {
+        const [targetSocketId] = targetUserSocket;
+        io.to(targetSocketId).emit("friend-invitation-received", {
+          fromUsername: result.fromUsername,
+          fromSign: result.fromSign,
+        });
+      }
+
+      console.log(
+        `Friend invitation sent from ${result.fromUsername} to ${result.toUsername}`
+      );
+    } catch (error) {
+      socket.emit("friend-invitation-error", { message: error.message });
+      console.log("Friend invitation failed:", error.message);
+    }
+  });
+
+  // Handle getting friends data
+  socket.on("get-friends-data", async () => {
+    console.log(
+      "get-friends-data received, isRegistered:",
+      socket.isRegistered,
+      "userId:",
+      socket.userId
+    );
+
+    if (!socket.isRegistered) {
+      console.log("User not registered, sending error");
+      socket.emit("friends-data-error", { message: "User not registered" });
+      return;
+    }
+
+    try {
+      console.log("Fetching friends data for user:", socket.userId);
+      const friendsData = await db.getFriendsData(socket.userId);
+      console.log("Friends data fetched:", friendsData);
+      socket.emit("friends-data-loaded", friendsData);
+    } catch (error) {
+      console.log("Error loading friends data:", error.message);
+      socket.emit("friends-data-error", { message: error.message });
+    }
+  });
+
+  // Handle accepting friend invitation
+  socket.on("accept-friend-invitation", async (data) => {
+    const { fromUsername } = data;
+
+    if (!socket.isRegistered) {
+      socket.emit("accept-friend-error", { message: "User not registered" });
+      return;
+    }
+
+    try {
+      const result = await db.acceptFriendInvitation(
+        socket.userId,
+        fromUsername
+      );
+      socket.emit("friend-invitation-accepted", {
+        friend: result.friend,
+      });
+
+      // Notify the sender if they're online
+      const senderSocket = [...registeredUsers.entries()].find(
+        ([socketId, userData]) => userData.username === fromUsername
+      );
+
+      if (senderSocket) {
+        const [senderSocketId] = senderSocket;
+        const currentUser = registeredUsers.get(socket.id);
+        io.to(senderSocketId).emit("friend-invitation-accepted-notification", {
+          friend: {
+            username: currentUser.username,
+            sign: currentUser.sun_sign,
+            isOnline: true,
+          },
+        });
+      }
+
+      console.log(
+        `Friend invitation accepted: ${fromUsername} and ${
+          registeredUsers.get(socket.id).username
+        }`
+      );
+    } catch (error) {
+      socket.emit("accept-friend-error", { message: error.message });
+      console.log("Error accepting friend invitation:", error.message);
+    }
+  });
+
+  // Handle declining friend invitation
+  socket.on("decline-friend-invitation", async (data) => {
+    const { fromUsername } = data;
+
+    if (!socket.isRegistered) {
+      socket.emit("decline-friend-error", { message: "User not registered" });
+      return;
+    }
+
+    try {
+      await db.declineFriendInvitation(socket.userId, fromUsername);
+      socket.emit("friend-invitation-declined", { fromUsername });
+
+      console.log(
+        `Friend invitation declined: ${fromUsername} to ${
+          registeredUsers.get(socket.id).username
+        }`
+      );
+    } catch (error) {
+      socket.emit("decline-friend-error", { message: error.message });
+      console.log("Error declining friend invitation:", error.message);
+    }
+  });
+
+  // Handle sending a chat request to a friend
+  socket.on("send-chat-request", async (data) => {
+    const { toUsername } = data;
+
+    if (!socket.isRegistered) {
+      socket.emit("chat-request-error", { message: "User not registered" });
+      return;
+    }
+
+    try {
+      const currentUser = registeredUsers.get(socket.id);
+
+      // Get friend user data from database
+      const friendUser = await db.getUserByUsername(toUsername);
+
+      if (!friendUser) {
+        socket.emit("chat-request-error", { message: "Friend user not found" });
+        return;
+      }
+
+      // Check if they're already friends (optional check)
+      // For now, allow chat requests to any user
+
+      const requestData = {
+        fromUsername: currentUser.username,
+        fromSign: currentUser.sun_sign,
+        toUsername: toUsername,
+        toSign: friendUser.sun_sign,
+        timestamp: new Date().toISOString(),
+      };
+
+      // Confirm to sender
+      socket.emit("chat-request-sent", requestData);
+
+      // Notify the target user if they're online
+      const friendSocket = [...registeredUsers.entries()].find(
+        ([socketId, userData]) => userData.username === toUsername
+      );
+
+      if (friendSocket) {
+        const [friendSocketId] = friendSocket;
+        io.to(friendSocketId).emit("chat-request-received", {
+          fromUsername: currentUser.username,
+          fromSign: currentUser.sun_sign,
+        });
+      }
+
+      console.log(
+        `Chat request sent from ${currentUser.username} to ${toUsername}`
+      );
+    } catch (error) {
+      socket.emit("chat-request-error", { message: error.message });
+      console.log("Error sending chat request:", error.message);
+    }
+  });
+
+  // Handle accepting a chat request
+  socket.on("accept-chat-request", async (data) => {
+    const { fromUsername } = data;
+
+    if (!socket.isRegistered) {
+      socket.emit("chat-request-error", { message: "User not registered" });
+      return;
+    }
+
+    try {
+      const currentUser = registeredUsers.get(socket.id);
+
+      // Get the requester's user data from database
+      const requesterUser = await db.getUserByUsername(fromUsername);
+
+      if (!requesterUser) {
+        socket.emit("chat-request-error", {
+          message: "Requester user not found",
+        });
+        return;
+      }
+
+      // Create persistent chat between the two users
+      const chat = await db.createPersistentChat(
+        {
+          id: requesterUser.id,
+          username: requesterUser.username,
+          zodiacChart: {
+            sun: requesterUser.sun_sign,
+            moon: requesterUser.moon_sign,
+            rising: requesterUser.rising_sign,
+          },
+        },
+        {
+          id: currentUser.id,
+          username: currentUser.username,
+          zodiacChart: {
+            sun: currentUser.sun_sign,
+            moon: currentUser.moon_sign,
+            rising: currentUser.rising_sign,
+          },
+        },
+        null
+      );
+
+      // Notify the accepter
+      socket.emit("chat-request-accepted", {
+        chatId: chat.id,
+        chatName: chat.name,
+        fromUsername: fromUsername,
+      });
+
+      // Notify the requester if they're online
+      const requesterSocket = [...registeredUsers.entries()].find(
+        ([socketId, userData]) => userData.username === fromUsername
+      );
+
+      if (requesterSocket) {
+        const [requesterSocketId] = requesterSocket;
+        io.to(requesterSocketId).emit("chat-request-accepted", {
+          chatId: chat.id,
+          chatName: chat.name,
+          fromUsername: currentUser.username,
+        });
+      }
+
+      console.log(
+        `Chat request accepted: ${fromUsername} and ${currentUser.username}`
+      );
+    } catch (error) {
+      socket.emit("chat-request-error", { message: error.message });
+      console.log("Error accepting chat request:", error.message);
+    }
+  });
+
+  // Handle declining a chat request
+  socket.on("decline-chat-request", async (data) => {
+    const { fromUsername } = data;
+
+    if (!socket.isRegistered) {
+      socket.emit("chat-request-error", { message: "User not registered" });
+      return;
+    }
+
+    try {
+      const currentUser = registeredUsers.get(socket.id);
+
+      // Notify the decliner
+      socket.emit("chat-request-declined", { fromUsername });
+
+      // Notify the requester if they're online
+      const requesterSocket = [...registeredUsers.entries()].find(
+        ([socketId, userData]) => userData.username === fromUsername
+      );
+
+      if (requesterSocket) {
+        const [requesterSocketId] = requesterSocket;
+        io.to(requesterSocketId).emit("chat-request-declined", {
+          toUsername: currentUser.username,
+        });
+      }
+
+      console.log(
+        `Chat request declined: ${fromUsername} to ${currentUser.username}`
+      );
+    } catch (error) {
+      socket.emit("chat-request-error", { message: error.message });
+      console.log("Error declining chat request:", error.message);
+    }
+  });
+
+  // Handle starting a chat with a friend (keep for backward compatibility)
+  socket.on("start-friend-chat", async (data) => {
+    const { friendUsername } = data;
+
+    if (!socket.isRegistered) {
+      socket.emit("start-friend-chat-error", {
+        message: "User not registered",
+      });
+      return;
+    }
+
+    try {
+      const currentUser = registeredUsers.get(socket.id);
+
+      // Get friend user data from database (works whether they're online or not)
+      const friendUser = await db.getUserByUsername(friendUsername);
+
+      if (!friendUser) {
+        socket.emit("start-friend-chat-error", {
+          message: "Friend user not found",
+        });
+        return;
+      }
+
+      // Create or get existing chat with this friend using proper user data
+      const chat = await db.createPersistentChat(
+        {
+          id: currentUser.id,
+          username: currentUser.username,
+          zodiacChart: {
+            sun: currentUser.sun_sign,
+            moon: currentUser.moon_sign,
+            rising: currentUser.rising_sign,
+          },
+        },
+        {
+          id: friendUser.id,
+          username: friendUser.username,
+          zodiacChart: {
+            sun: friendUser.sun_sign,
+            moon: friendUser.moon_sign,
+            rising: friendUser.rising_sign,
+          },
+        },
+        null // Let the database generate the chat ID
+      );
+
+      socket.emit("friend-chat-started", {
+        chatId: chat.id,
+        chatName: chat.name,
+        friendUsername: friendUsername,
+      });
+
+      // Notify friend if they're online
+      const friendSocket = [...registeredUsers.entries()].find(
+        ([socketId, userData]) => userData.username === friendUsername
+      );
+
+      if (friendSocket) {
+        const [friendSocketId] = friendSocket;
+        io.to(friendSocketId).emit("friend-chat-invitation", {
+          chatId: chat.id,
+          chatName: chat.name,
+          fromUsername: currentUser.username,
+        });
+      }
+
+      console.log(
+        `Friend chat started between ${currentUser.username} and ${friendUsername}`
+      );
+    } catch (error) {
+      socket.emit("start-friend-chat-error", { message: error.message });
+      console.log("Error starting friend chat:", error.message);
+    }
+  });
+
   // Handle disconnection
   socket.on("disconnect", () => {
     console.log("User disconnected:", socket.id);

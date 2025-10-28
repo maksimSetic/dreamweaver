@@ -114,6 +114,11 @@ export const useAuth = () => {
 
     setRememberMe(remember);
     setIsLoading(true);
+
+    // Store credentials temporarily for SocketContext authentication
+    sessionStorage.setItem("temp_username", username);
+    sessionStorage.setItem("temp_password", password);
+
     socket.emit("login", { username, password });
   };
 
@@ -122,6 +127,10 @@ export const useAuth = () => {
     setRememberMe(false);
     localStorage.removeItem("dreamweaver_user");
     localStorage.removeItem("dreamweaver_remember");
+
+    // Clear temporary credentials
+    sessionStorage.removeItem("temp_username");
+    sessionStorage.removeItem("temp_password");
   };
 
   const debugGetUsers = () => {

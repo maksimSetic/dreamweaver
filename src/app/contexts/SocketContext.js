@@ -11,9 +11,12 @@ export const useSocket = () => {
   return context;
 };
 
-export const SocketProvider = ({ children, onMatchFound }) => {
+export const SocketProvider = ({ children, onMatchFound, user }) => {
+  // Store user credentials for authentication
+  const [userCredentials, setUserCredentials] = useState(null);
   const [socket, setSocket] = useState(null);
   const [isConnected, setIsConnected] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isQueuing, setIsQueuing] = useState(false);
   const [chatClosed, setChatClosed] = useState(() => {
     // Restore chat closed state from localStorage
@@ -79,6 +82,15 @@ export const SocketProvider = ({ children, onMatchFound }) => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [chatToDelete, setChatToDelete] = useState(null);
 
+  // Friends state
+  const [friends, setFriends] = useState([]);
+  const [pendingInvitations, setPendingInvitations] = useState([]);
+  const [sentInvitations, setSentInvitations] = useState([]);
+
+  // Chat requests state
+  const [chatRequests, setChatRequests] = useState([]);
+  const [sentChatRequests, setSentChatRequests] = useState([]);
+
   // Save match state to localStorage whenever it changes
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -134,8 +146,33 @@ export const SocketProvider = ({ children, onMatchFound }) => {
     });
 
     socketInstance.on("connect", () => {
-      console.log("Connected to server");
+      console.log("SocketContext socket connected to server");
       setIsConnected(true);
+
+      // If we have a user, authenticate this socket with the server
+      if (user && user.username) {
+        console.log("Auto-authenticating socket for user:", user.username);
+        console.log("User object:", user);
+
+        if (user.password) {
+          console.log("Using user password for authentication");
+          socketInstance.emit("login", {
+            username: user.username,
+            password: user.password,
+          });
+        } else if (userCredentials) {
+          console.log("Using stored credentials for authentication");
+          socketInstance.emit("login", userCredentials);
+        } else {
+          console.log("No password or stored credentials available");
+          console.log(
+            "Note: SocketContext socket cannot authenticate automatically"
+          );
+          console.log(
+            "Chat requests and friends features may not work until manual authentication"
+          );
+        }
+      }
 
       // If we have an existing match, try to rejoin it
       if (isMatched && matchData && !partnerDisconnected) {
@@ -155,6 +192,7 @@ export const SocketProvider = ({ children, onMatchFound }) => {
     socketInstance.on("disconnect", (reason) => {
       console.log("Disconnected from server:", reason);
       setIsConnected(false);
+      setIsAuthenticated(false);
       setIsQueuing(false);
       // Don't clear match state on disconnect - preserve chat history
 
@@ -163,6 +201,29 @@ export const SocketProvider = ({ children, onMatchFound }) => {
         // Server disconnected us, reconnect manually
         socketInstance.connect();
       }
+    });
+
+    // Authentication handlers
+    socketInstance.on("register-success", (userData) => {
+      console.log("Registration successful in SocketContext:", userData);
+      // Load friends data after successful registration
+      setTimeout(() => {
+        socketInstance.emit("get-friends-data");
+      }, 100);
+    });
+
+    socketInstance.on("login-success", (userData) => {
+      console.log("Login successful in SocketContext:", userData);
+      setIsAuthenticated(true);
+      // Load friends data after successful login
+      setTimeout(() => {
+        socketInstance.emit("get-friends-data");
+      }, 100);
+    });
+
+    socketInstance.on("login-error", (error) => {
+      console.error("SocketContext login error:", error);
+      setIsAuthenticated(false);
     });
 
     socketInstance.on("match-found", (data) => {
@@ -186,7 +247,8 @@ export const SocketProvider = ({ children, onMatchFound }) => {
         setCurrentChatId(data.matchId);
         // Reload persistent chats to show the new chat in sidebar
         setTimeout(() => {
-          socketInstance.emit("get-persistent-chats");
+          console.log("Match found - reloading persistent chats");
+          loadPersistentChats();
         }, 1000); // Small delay to ensure the chat is created in the database
       } else {
         // For temporary matches, use the match- prefix (it will appear in temporary match section)
@@ -387,6 +449,138 @@ export const SocketProvider = ({ children, onMatchFound }) => {
       setMatchData(null);
     });
 
+    // Friends event listeners
+    socketInstance.on("friends-data-loaded", (data) => {
+      console.log("Friends data loaded:", data);
+      setFriends(data.friends || []);
+      setPendingInvitations(data.pendingInvitations || []);
+      setSentInvitations(data.sentInvitations || []);
+    });
+
+    socketInstance.on("friend-invitation-sent", (data) => {
+      console.log("Friend invitation sent:", data);
+      setSentInvitations((prev) => [...prev, data]);
+    });
+
+    socketInstance.on("friend-invitation-received", (data) => {
+      console.log("Friend invitation received:", data);
+      setPendingInvitations((prev) => [...prev, data]);
+    });
+
+    socketInstance.on("friend-invitation-accepted", (data) => {
+      console.log("Friend invitation accepted:", data);
+      setFriends((prev) => [...prev, data.friend]);
+      setPendingInvitations((prev) =>
+        prev.filter((inv) => inv.fromUsername !== data.friend.username)
+      );
+      setSentInvitations((prev) =>
+        prev.filter((inv) => inv.toUsername !== data.friend.username)
+      );
+    });
+
+    socketInstance.on("friend-invitation-declined", (data) => {
+      console.log("Friend invitation declined:", data);
+      setPendingInvitations((prev) =>
+        prev.filter((inv) => inv.fromUsername !== data.fromUsername)
+      );
+      setSentInvitations((prev) =>
+        prev.filter((inv) => inv.toUsername !== data.fromUsername)
+      );
+    });
+
+    socketInstance.on("friend-chat-started", (data) => {
+      console.log("Friend chat started:", data);
+      // Reload persistent chats to show the new friend chat
+      setTimeout(() => {
+        console.log("Friend chat started - reloading persistent chats");
+        loadPersistentChats();
+      }, 500);
+      setCurrentChatId(data.chatId);
+    });
+
+    socketInstance.on("friend-chat-invitation", (data) => {
+      console.log("Received friend chat invitation:", data);
+      // Reload persistent chats to show the new friend chat
+      setTimeout(() => {
+        console.log("Friend chat invitation - reloading persistent chats");
+        loadPersistentChats();
+      }, 500);
+      // Optionally set as current chat if user wants to auto-join
+      // setCurrentChatId(data.chatId);
+    });
+
+    socketInstance.on("start-friend-chat-error", (error) => {
+      console.error("Error starting friend chat:", error.message);
+      alert(`Error starting friend chat: ${error.message}`);
+    });
+
+    // Chat request event listeners
+    socketInstance.on("chat-request-sent", (data) => {
+      console.log("Chat request sent:", data);
+      setSentChatRequests((prev) => [...prev, data]);
+    });
+
+    socketInstance.on("chat-request-received", (data) => {
+      console.log("Chat request received:", data);
+      setChatRequests((prev) => [...prev, data]);
+    });
+
+    socketInstance.on("chat-request-accepted", (data) => {
+      console.log("Chat request accepted:", data);
+      // Remove from pending requests
+      setChatRequests((prev) =>
+        prev.filter((req) => req.fromUsername !== data.fromUsername)
+      );
+      // Remove from sent requests if this was our request
+      setSentChatRequests((prev) =>
+        prev.filter((req) => req.toUsername !== data.fromUsername)
+      );
+
+      // Immediately open the new chat
+      setCurrentChatId(data.chatId);
+      setIsMatched(true);
+      setChatClosed(false);
+      setPartnerDisconnected(false);
+
+      // Set match data for the new chat
+      setMatchData({
+        matchId: data.chatId,
+        isPersistent: true,
+        partner: {
+          name: data.fromUsername,
+          sign: null, // Will be updated when chat loads
+        },
+      });
+
+      // Reload persistent chats to show the new chat
+      setTimeout(() => {
+        console.log("Chat request accepted - reloading persistent chats");
+        loadPersistentChats();
+      }, 500);
+    });
+
+    socketInstance.on("chat-request-declined", (data) => {
+      console.log("Chat request declined:", data);
+      setChatRequests((prev) =>
+        prev.filter((req) => req.fromUsername !== data.fromUsername)
+      );
+      // If we received data.toUsername, it means our sent request was declined
+      if (data.toUsername) {
+        setSentChatRequests((prev) =>
+          prev.filter((req) => req.toUsername !== data.toUsername)
+        );
+      }
+    });
+
+    socketInstance.on("chat-request-error", (error) => {
+      console.error("Chat request error:", error.message);
+      alert(`Chat request error: ${error.message}`);
+    });
+
+    socketInstance.on("friends-data-error", (error) => {
+      console.error("Friends data error:", error.message);
+    });
+
     setSocket(socketInstance);
 
     return () => {
@@ -545,9 +739,19 @@ export const SocketProvider = ({ children, onMatchFound }) => {
     }
   };
 
-  // Load persistent chats for registered users
+  // Load persistent chats for registered users (with throttling)
+  let lastLoadTime = 0;
   const loadPersistentChats = () => {
+    const now = Date.now();
+    // Throttle requests to once every 2 seconds
+    if (now - lastLoadTime < 2000) {
+      console.log("Throttling loadPersistentChats request");
+      return;
+    }
+
     if (socket) {
+      lastLoadTime = now;
+      console.log("Loading persistent chats...");
       socket.emit("get-persistent-chats");
     }
   };
@@ -706,9 +910,160 @@ export const SocketProvider = ({ children, onMatchFound }) => {
     }
   };
 
+  // Friends functions
+  const loadFriends = () => {
+    console.log(
+      "loadFriends called, socket:",
+      !!socket,
+      "isConnected:",
+      isConnected
+    );
+    if (socket) {
+      console.log("Emitting get-friends-data");
+      socket.emit("get-friends-data");
+    } else {
+      console.log("No socket available for loadFriends");
+    }
+  };
+
+  const sendFriendInvitation = (username) => {
+    if (socket && username.trim()) {
+      socket.emit("send-friend-invitation", { toUsername: username.trim() });
+    }
+  };
+
+  const acceptFriendInvitation = (fromUsername) => {
+    if (socket) {
+      socket.emit("accept-friend-invitation", { fromUsername });
+    }
+  };
+
+  const declineFriendInvitation = (fromUsername) => {
+    if (socket) {
+      socket.emit("decline-friend-invitation", { fromUsername });
+    }
+  };
+
+  const sendChatRequest = (friendUsername) => {
+    if (!socket) {
+      console.error("SocketContext: No socket available for chat request");
+      return;
+    }
+
+    if (!isAuthenticated) {
+      console.error(
+        "SocketContext: Not authenticated - cannot send chat request"
+      );
+      // Try to re-authenticate
+      const tempUsername = sessionStorage.getItem("temp_username");
+      const tempPassword = sessionStorage.getItem("temp_password");
+      if (tempUsername && tempPassword) {
+        console.log("Re-authenticating before sending chat request...");
+        authenticateSocket({ username: tempUsername, password: tempPassword });
+        // Retry after a delay
+        setTimeout(() => {
+          sendChatRequest(friendUsername);
+        }, 1000);
+      }
+      return;
+    }
+
+    console.log("Sending chat request to:", friendUsername);
+    socket.emit("send-chat-request", { toUsername: friendUsername });
+  };
+
+  const acceptChatRequest = (fromUsername) => {
+    if (!socket) {
+      console.error(
+        "SocketContext: No socket available for accepting chat request"
+      );
+      return;
+    }
+
+    if (!isAuthenticated) {
+      console.error(
+        "SocketContext: Not authenticated - cannot accept chat request"
+      );
+      return;
+    }
+
+    console.log("Accepting chat request from:", fromUsername);
+    socket.emit("accept-chat-request", { fromUsername });
+  };
+
+  const declineChatRequest = (fromUsername) => {
+    if (!socket) {
+      console.error(
+        "SocketContext: No socket available for declining chat request"
+      );
+      return;
+    }
+
+    if (!isAuthenticated) {
+      console.error(
+        "SocketContext: Not authenticated - cannot decline chat request"
+      );
+      return;
+    }
+
+    console.log("Declining chat request from:", fromUsername);
+    socket.emit("decline-chat-request", { fromUsername });
+  };
+
+  // Keep original startFriendChat for backward compatibility (now used internally)
+  const startFriendChat = (friendUsername) => {
+    if (socket) {
+      socket.emit("start-friend-chat", { friendUsername });
+    }
+  };
+
+  // Authentication functions
+  const register = (userData) => {
+    if (socket) {
+      socket.emit("register", userData);
+    }
+  };
+
+  const login = (credentials) => {
+    if (socket) {
+      setUserCredentials(credentials); // Store credentials for later use
+      socket.emit("login", credentials);
+    }
+  };
+
+  // Manual authentication function for SocketContext
+  const authenticateSocket = (credentials) => {
+    if (!socket) {
+      console.log("SocketContext: No socket available for authentication");
+      return;
+    }
+
+    if (!credentials) {
+      console.log("SocketContext: No credentials provided for authentication");
+      return;
+    }
+
+    if (!socket.connected) {
+      console.log(
+        "SocketContext: Socket not connected, retrying in 1 second..."
+      );
+      setTimeout(() => {
+        authenticateSocket(credentials);
+      }, 1000);
+      return;
+    }
+
+    console.log(
+      "SocketContext: Manually authenticating socket with username:",
+      credentials.username
+    );
+    socket.emit("login", credentials);
+  };
+
   const value = {
     socket,
     isConnected,
+    isAuthenticated,
     isQueuing,
     isMatched,
     matchData,
@@ -735,6 +1090,25 @@ export const SocketProvider = ({ children, onMatchFound }) => {
     confirmDeleteChat,
     showDeleteModal,
     chatToDelete,
+    // Friends functions
+    friends,
+    pendingInvitations,
+    sentInvitations,
+    loadFriends,
+    sendFriendInvitation,
+    acceptFriendInvitation,
+    declineFriendInvitation,
+    startFriendChat,
+    // Chat request functions
+    chatRequests,
+    sentChatRequests,
+    sendChatRequest,
+    acceptChatRequest,
+    declineChatRequest,
+    // Authentication functions
+    register,
+    login,
+    authenticateSocket,
   };
 
   return (

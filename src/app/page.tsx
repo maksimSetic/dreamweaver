@@ -160,8 +160,49 @@ export default function Home() {
 
   // Create a component that has access to SocketContext
   const AppContent = () => {
-    const { cleanupOnLogout } = useSocket();
+    const {
+      cleanupOnLogout,
+      authenticateSocket,
+      isConnected,
+      isAuthenticated,
+    } = useSocket();
 
+    // Authenticate SocketContext when user is available and socket is connected
+    useEffect(() => {
+      console.log(
+        "AppContent useEffect triggered. User:",
+        user && (user as any).username
+      );
+      console.log(
+        "Socket connected:",
+        isConnected,
+        "Socket authenticated:",
+        isAuthenticated
+      );
+
+      if (user && authenticateSocket && isConnected && !isAuthenticated) {
+        // Try to get credentials from sessionStorage first (fresh login)
+        const tempUsername = sessionStorage.getItem("temp_username");
+        const tempPassword = sessionStorage.getItem("temp_password");
+
+        console.log(
+          "Temp credentials available:",
+          !!tempUsername && !!tempPassword
+        );
+
+        if (tempUsername && tempPassword) {
+          console.log("Authenticating SocketContext with temp credentials");
+          authenticateSocket({
+            username: tempUsername,
+            password: tempPassword,
+          });
+        } else {
+          console.log(
+            "No temp credentials available for SocketContext authentication"
+          );
+        }
+      }
+    }, [user, isConnected, isAuthenticated]); // Added isConnected and isAuthenticated to dependencies
     const handleLogoutWithCleanup = () => {
       cleanupOnLogout(); // Clean up socket state first
       logout(); // Then handle auth logout
@@ -191,6 +232,7 @@ export default function Home() {
 
   return (
     <SocketProvider
+      user={user}
       onMatchFound={() => {
         console.log("onMatchFound callback triggered, navigating to chat");
         setActive("chat");
