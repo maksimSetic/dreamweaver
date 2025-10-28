@@ -47,7 +47,7 @@ export const SocketProvider = ({ children, onMatchFound }) => {
     }
     return null;
   });
-  
+
   // Store original temporary match data separately to preserve it when switching chats
   const [originalTempMatch, setOriginalTempMatch] = useState(() => {
     if (typeof window !== "undefined") {
@@ -56,7 +56,7 @@ export const SocketProvider = ({ children, onMatchFound }) => {
     }
     return null;
   });
-  
+
   // Store original temporary match messages separately
   const [originalTempMessages, setOriginalTempMessages] = useState(() => {
     if (typeof window !== "undefined") {
@@ -65,7 +65,7 @@ export const SocketProvider = ({ children, onMatchFound }) => {
     }
     return [];
   });
-  
+
   const [messages, setMessages] = useState(() => {
     // Restore messages from localStorage
     if (typeof window !== "undefined") {
@@ -93,7 +93,13 @@ export const SocketProvider = ({ children, onMatchFound }) => {
         })
       );
     }
-  }, [isMatched, matchData, partnerDisconnected, chatClosed, originalTempMatch]);
+  }, [
+    isMatched,
+    matchData,
+    partnerDisconnected,
+    chatClosed,
+    originalTempMatch,
+  ]);
 
   // Save messages to localStorage whenever they change
   useEffect(() => {
@@ -105,7 +111,10 @@ export const SocketProvider = ({ children, onMatchFound }) => {
   // Save temporary match messages separately
   useEffect(() => {
     if (typeof window !== "undefined") {
-      localStorage.setItem("dreamweaver-temp-messages", JSON.stringify(originalTempMessages));
+      localStorage.setItem(
+        "dreamweaver-temp-messages",
+        JSON.stringify(originalTempMessages)
+      );
     }
   }, [originalTempMessages]);
 
@@ -163,14 +172,14 @@ export const SocketProvider = ({ children, onMatchFound }) => {
       setMatchData(data); // This should include matchId
       setPartnerDisconnected(false); // Reset partner disconnected state
       setChatClosed(false); // Reset chat closed state
-      
+
       // Store original temporary match data if it's not persistent
       if (!data.isPersistent) {
         setOriginalTempMatch(data);
       } else {
         setOriginalTempMatch(null); // Clear if persistent
       }
-      
+
       // Set currentChatId based on match type
       if (data.isPersistent) {
         // For persistent matches, use just the matchId (it will appear in persistent chats)
@@ -230,9 +239,9 @@ export const SocketProvider = ({ children, onMatchFound }) => {
         sender: messageData.sender || messageData.senderId,
         timestamp: new Date().toLocaleTimeString(),
       };
-      
+
       setMessages((prev) => [...prev, newMessage]);
-      
+
       // Also update temporary match messages if this is a temporary match
       if (originalTempMatch && !originalTempMatch.isPersistent) {
         setOriginalTempMessages((prev) => [...prev, newMessage]);
@@ -440,9 +449,9 @@ export const SocketProvider = ({ children, onMatchFound }) => {
         text: message,
         timestamp: new Date().toLocaleTimeString(),
       };
-      
+
       setMessages((prev) => [...prev, newMessage]);
-      
+
       // Also update temporary match messages if this is a temporary match
       if (originalTempMatch && !originalTempMatch.isPersistent) {
         setOriginalTempMessages((prev) => [...prev, newMessage]);
@@ -651,7 +660,9 @@ export const SocketProvider = ({ children, onMatchFound }) => {
       setMessages(dummyMessages2);
     } else if (chat.isTemporaryMatch) {
       // For temporary match, restore the original temporary match data and messages
-      console.log("Opening temporary match chat, restoring original match data and messages");
+      console.log(
+        "Opening temporary match chat, restoring original match data and messages"
+      );
       if (originalTempMatch) {
         setMatchData(originalTempMatch);
         setIsMatched(true);

@@ -140,9 +140,11 @@ export default function ChatSidebar({ user, onNewMatchClick, onFriendsClick }) {
                   const tempMatchChat = {
                     chat_id: `match-${originalTempMatch.matchId}`,
                     user1_username: user?.username || "You",
-                    user2_username: originalTempMatch.partner?.name || "Partner",
+                    user2_username:
+                      originalTempMatch.partner?.name || "Partner",
                     user1_sign: user?.zodiacChart?.sun || "Aries",
-                    user2_sign: originalTempMatch.partner?.zodiacChart?.sun || "Aries",
+                    user2_sign:
+                      originalTempMatch.partner?.zodiacChart?.sun || "Aries",
                     last_message_at: new Date().toISOString(),
                     isTemporaryMatch: true, // Flag to identify this as a temporary match
                   };
@@ -151,7 +153,9 @@ export default function ChatSidebar({ user, onNewMatchClick, onFriendsClick }) {
               >
                 <div className="flex items-center space-x-3">
                   <div className="text-xl">
-                    {zodiacSymbols[originalTempMatch.partner?.zodiacChart?.sun] || "⭐"}
+                    {zodiacSymbols[
+                      originalTempMatch.partner?.zodiacChart?.sun
+                    ] || "⭐"}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="font-medium text-white truncate">
@@ -161,7 +165,8 @@ export default function ChatSidebar({ user, onNewMatchClick, onFriendsClick }) {
                       </span>
                     </div>
                     <div className="text-sm text-slate-300 truncate">
-                      {originalTempMatch.partner?.zodiacChart?.sun || "Unknown"} • Temporary match
+                      {originalTempMatch.partner?.zodiacChart?.sun || "Unknown"}{" "}
+                      • Temporary match
                     </div>
                   </div>
                   <div className="text-xs text-purple-400">
