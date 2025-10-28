@@ -3791,14 +3791,14 @@ export default function MainContent({ active, user, onLogin, setActive }) {
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.5, opacity: 0, y: 50 }}
               transition={{ type: "spring", stiffness: 300, damping: 25 }}
-              className="bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 p-8 rounded-2xl border border-purple-300/30 max-w-md w-full text-center shadow-2xl"
+              className="bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 p-6 rounded-2xl border border-purple-300/30 max-w-md w-full text-center shadow-2xl"
             >
               {/* Match Found Header */}
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ delay: 0.2, type: "spring", stiffness: 300 }}
-                className="text-6xl mb-6"
+                className="text-4xl mb-4"
               >
                 ✨
               </motion.div>
@@ -3807,7 +3807,7 @@ export default function MainContent({ active, user, onLogin, setActive }) {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
-                className="text-3xl font-bold text-white mb-4"
+                className="text-2xl font-bold text-white mb-4"
               >
                 Match Found!
               </motion.h2>
@@ -3816,37 +3816,78 @@ export default function MainContent({ active, user, onLogin, setActive }) {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4 }}
-                className="mb-6"
+                className="mb-4"
               >
-                <p className="text-purple-200 text-lg mb-4">
-                  You've been matched with
-                </p>
-                <div className="bg-white/10 p-4 rounded-xl border border-purple-300/30 mb-4">
-                  <h3 className="text-xl font-bold text-white mb-2">
-                    {matchData.partner?.name || "Your Partner"}
-                  </h3>
-                  <div className="flex justify-center items-center gap-2 text-purple-200">
-                    <span>
-                      {zodiacSymbols[matchData.partner?.sign]}{" "}
-                      {matchData.partner?.sign}
-                    </span>
-                    {matchData.partner?.moon && (
-                      <>
-                        <span>•</span>
-                        <span>🌙 {matchData.partner?.moon}</span>
-                      </>
-                    )}
-                    {matchData.partner?.rising && (
-                      <>
-                        <span>•</span>
-                        <span>⬆️ {matchData.partner?.rising}</span>
-                      </>
-                    )}
+                {/* Zodiac Signs in the Middle */}
+                <div className="flex items-center justify-center gap-8 mb-4">
+                  <div className="text-center">
+                    <div className="text-purple-200 text-sm font-semibold mb-2">
+                      {user?.username || "You"}
+                    </div>
+                    <div className="text-6xl mb-1">
+                      {zodiacSymbols[user?.zodiacChart?.sun]}
+                    </div>
+                    <div className="text-purple-200 text-xs">
+                      {user?.zodiacChart?.sun || "Unknown"}
+                    </div>
+                  </div>
+
+                  <div className="text-purple-300 text-4xl mt-6">💕</div>
+
+                  <div className="text-center">
+                    <div className="text-purple-200 text-sm font-semibold mb-2">
+                      {matchData.partner?.name || "Partner"}
+                    </div>
+                    <div className="text-6xl mb-1">
+                      {zodiacSymbols[matchData.partner?.sign]}
+                    </div>
+                    <div className="text-purple-200 text-xs">
+                      {matchData.partner?.sign || "Unknown"}
+                    </div>
                   </div>
                 </div>
-                <p className="text-purple-300 text-sm">
-                  Your cosmic compatibility score: {matchData.compatibility}%
-                </p>
+
+                {/* Compatibility Slider */}
+                <div className="bg-white/10 p-4 rounded-xl border border-purple-300/30">
+                  <div className="text-center mb-3">
+                    <div className="text-purple-200 text-sm mb-2">
+                      Cosmic Compatibility
+                    </div>
+                    <div className="text-2xl font-bold text-white mb-3">
+                      {matchData.compatibility || 85}
+                    </div>
+                  </div>
+
+                  {/* Progress Bar */}
+                  <div className="relative w-full h-2 bg-gray-700 rounded-full overflow-hidden">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${matchData.compatibility || 85}%` }}
+                      transition={{
+                        delay: 0.6,
+                        duration: 1.5,
+                        ease: "easeOut",
+                      }}
+                      className="h-full rounded-full relative"
+                      style={{
+                        background: `linear-gradient(90deg, 
+                          #ec4899 0%, 
+                          #8b5cf6 50%, 
+                          #3b82f6 100%)`,
+                      }}
+                    >
+                      {/* Sparkle effect on the progress bar */}
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent transform -skew-x-12 animate-pulse"></div>
+                    </motion.div>
+                  </div>
+
+                  {/* Compatibility labels */}
+                  <div className="flex justify-between mt-2 text-xs text-purple-300">
+                    <span>✨</span>
+                    <span>🌟</span>
+                    <span>💫</span>
+                  </div>
+                </div>
               </motion.div>
 
               {/* Join Chat Button */}
@@ -3857,7 +3898,7 @@ export default function MainContent({ active, user, onLogin, setActive }) {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setShowMatchFoundModal(false)}
-                className="bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white font-bold py-4 px-8 rounded-xl text-lg shadow-lg hover:shadow-xl transition-all duration-300 w-full"
+                className="bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white font-bold py-3 px-6 rounded-xl text-base shadow-lg hover:shadow-xl transition-all duration-300 w-full"
               >
                 💬 Join Chat
               </motion.button>
