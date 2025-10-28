@@ -10,6 +10,7 @@ import Notes from "../Components/Features/Notes";
 import MysticElements from "../Components/Features/MysticElements";
 import Friends from "../Components/Features/Friends";
 import UserProfile from "../Components/UserProfile";
+import ChatSidebar from "../Components/ChatSidebar";
 import { useSocket } from "../contexts/SocketContext";
 import EmojiPicker from "emoji-picker-react";
 
@@ -3076,435 +3077,522 @@ export default function MainContent({ active, user, onLogin, setActive }) {
         <div>
           {user ? (
             <>
-              {isMatched && matchData && !chatClosed && !showMatchFoundModal ? (
-                // Chat Interface - Use the same interface from ZodiacCompatibility
-                <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 text-white p-4 sm:p-6 md:p-8">
-                  <div className="max-w-4xl mx-auto">
-                    {/* Chat Header */}
-                    <motion.div
-                      initial={{ opacity: 0, y: -20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="flex flex-col sm:flex-row items-center justify-between mb-6 gap-4 bg-white/10 p-4 rounded-xl backdrop-blur-sm"
-                    >
-                      <button
-                        onClick={closeChat}
-                        className="flex items-center space-x-2 bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded-lg transition-colors text-sm w-full sm:w-auto justify-center sm:justify-start text-white"
-                        title="Close chat and return to queue"
-                      >
-                        <span>✕</span>
-                        <span>Close</span>
-                      </button>
+              {/* Chat Interface with Sidebar Layout */}
+              <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 text-white flex">
+                {/* Chat Sidebar Component */}
+                <ChatSidebar
+                  user={user}
+                  onNewMatchClick={() => console.log("New match clicked")}
+                  onFriendsClick={() => console.log("Friends clicked")}
+                />
 
-                      <div className="text-center flex-1">
-                        <h1 className="text-xl sm:text-2xl font-bold">
-                          💬 Chatting with{" "}
-                          {matchData?.partner?.name || "Partner"}
-                        </h1>
-                        <p className="text-sm text-purple-200">
-                          {matchData?.partner?.sign &&
-                            zodiacSymbols[matchData.partner.sign]}{" "}
-                          {matchData?.partner?.sign || "Unknown"} •
-                          {partnerDisconnected
-                            ? " Partner disconnected"
-                            : " Real person!"}
-                        </p>
-                      </div>
-
-                      {partnerDisconnected ? (
-                        <button
-                          onClick={() => {
-                            startNewMatch();
-                            // Optionally navigate back to zodiac compatibility
-                            setActive("zodiac");
-                          }}
-                          className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 px-4 py-2 rounded-lg transition-colors text-sm text-white font-medium"
+                {/* Main Chat Content */}
+                <div className="flex-1">
+                  {isMatched &&
+                  matchData &&
+                  !chatClosed &&
+                  !showMatchFoundModal ? (
+                    // Chat Interface - Use the same interface from ZodiacCompatibility
+                    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 text-white p-4 sm:p-6 md:p-8">
+                      <div className="max-w-4xl mx-auto">
+                        {/* Chat Header */}
+                        <motion.div
+                          initial={{ opacity: 0, y: -20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="flex flex-col sm:flex-row items-center justify-between mb-6 gap-4 bg-white/10 p-4 rounded-xl backdrop-blur-sm"
                         >
-                          🔍 Back to Matching
-                        </button>
-                      ) : (
-                        <div className="text-green-400 text-sm">
-                          🟢 Connected
-                        </div>
-                      )}
-                    </motion.div>
-
-                    {/* Chat Messages */}
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: 0.2 }}
-                      className="relative"
-                    >
-                      <div
-                        ref={chatContainerRef}
-                        onScroll={handleScroll}
-                        className="bg-white/5 rounded-xl p-4 mb-4 h-96 overflow-y-auto space-y-3"
-                      >
-                        {messages.map((message) => (
-                          <motion.div
-                            key={message.id}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className={`flex ${
-                              message.type === "sent"
-                                ? "justify-end"
-                                : message.type === "system"
-                                ? "justify-center"
-                                : "justify-start"
-                            }`}
-                          >
-                            <div
-                              className={`max-w-xs sm:max-w-md p-3 rounded-lg ${
-                                message.type === "sent"
-                                  ? "bg-gradient-to-r from-pink-500 to-purple-600 text-white"
-                                  : message.type === "system"
-                                  ? "bg-yellow-500/20 text-yellow-200 text-center text-sm"
-                                  : "bg-white/10 text-white"
-                              }`}
-                            >
-                              <p className="text-sm sm:text-base">
-                                {message.text}
-                              </p>
-                              <p className="text-xs opacity-70 mt-1">
-                                {message.timestamp}
-                              </p>
-                            </div>
-                          </motion.div>
-                        ))}
-                      </div>
-
-                      {/* New Message Indicator */}
-                      <AnimatePresence>
-                        {showNewMessageIndicator && (
-                          <motion.button
-                            initial={{ opacity: 0, y: 20, scale: 0.8 }}
-                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                            exit={{ opacity: 0, y: 20, scale: 0.8 }}
-                            transition={{
-                              type: "spring",
-                              stiffness: 300,
-                              damping: 25,
-                            }}
-                            onClick={handleNewMessageIndicatorClick}
-                            className="absolute bottom-6 right-6 bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white px-4 py-2 rounded-full shadow-lg flex items-center space-x-2 transition-all duration-200 z-10"
-                          >
-                            <span className="text-sm font-medium">
-                              {newMessageCount} new message
-                              {newMessageCount > 1 ? "s" : ""}
-                            </span>
-                            <svg
-                              className="w-4 h-4"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M19 14l-7 7m0 0l-7-7m7 7V3"
-                              />
-                            </svg>
-                          </motion.button>
-                        )}
-                      </AnimatePresence>
-                    </motion.div>
-
-                    {/* Your Zodiac Characters Section */}
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{
-                        delay: 0.25,
-                        duration: 0.5,
-                        ease: [0.4, 0, 0.2, 1],
-                      }}
-                      className="bg-white/5 rounded-xl p-4 mb-4 border border-purple-300/20 backdrop-blur-sm"
-                    >
-                      <div className="flex items-center mb-4">
-                        <span className="text-2xl">
-                          {zodiacSymbols[user?.zodiacChart?.sun]}
-                        </span>
-                        <h3 className="text-lg font-semibold text-purple-200">
-                          Your {user?.zodiacChart?.sun} Characters
-                        </h3>
-                      </div>
-
-                      {/* Character Carousel */}
-                      <div className="character-carousel-container">
-                        <style jsx>{`
-                          .character-carousel-container :global(.swiper) {
-                            padding: 10px 0;
-                            margin: 0 -8px; /* Negative margin to allow slides to touch edges */
-                          }
-
-                          .character-carousel-container :global(.swiper-slide) {
-                            /* Slides will be sized automatically by slidesPerView */
-                          }
-
-                          .character-carousel-container
-                            :global(.swiper-button-next),
-                          .character-carousel-container
-                            :global(.swiper-button-prev) {
-                            background: rgba(147, 51, 234, 0.7);
-                            backdrop-filter: blur(4px);
-                            border: 1px solid rgba(147, 51, 234, 0.3);
-                            border-radius: 50%;
-                            color: white;
-                            width: 44px;
-                            height: 44px;
-                            margin-top: -22px;
-                            box-shadow: 0 4px 6px -1px rgba(147, 51, 234, 0.25);
-                            transition: all 0.2s ease;
-                          }
-
-                          .character-carousel-container
-                            :global(.swiper-button-next:hover),
-                          .character-carousel-container
-                            :global(.swiper-button-prev:hover) {
-                            background: rgba(147, 51, 234, 0.9);
-                            transform: scale(1.1);
-                          }
-
-                          .character-carousel-container
-                            :global(.swiper-button-next::after),
-                          .character-carousel-container
-                            :global(.swiper-button-prev::after) {
-                            font-size: 16px;
-                            font-weight: bold;
-                          }
-
-                          .character-carousel-container
-                            :global(.swiper-pagination-bullet) {
-                            background: rgba(168, 85, 247, 0.3);
-                            width: 8px;
-                            height: 8px;
-                            margin: 0 4px !important;
-                            transition: all 0.3s ease;
-                          }
-
-                          .character-carousel-container
-                            :global(.swiper-pagination-bullet-active) {
-                            background: rgba(168, 85, 247, 1);
-                            transform: scale(1.2);
-                          }
-
-                          .character-carousel-container
-                            :global(.swiper-pagination) {
-                            position: static !important;
-                            margin-top: 1rem;
-                          }
-                        `}</style>
-                        <Swiper
-                          modules={[Navigation, Pagination]}
-                          spaceBetween={2} // 2px gap between slides
-                          slidesPerView={6} // Show exactly 6 slides at a time
-                          navigation={allCharacters.length > 6}
-                          pagination={
-                            allCharacters.length > 6
-                              ? { clickable: true }
-                              : false
-                          }
-                          loop={true} // Enable infinite cycling
-                          grabCursor={true}
-                          breakpoints={{
-                            320: {
-                              slidesPerView: 2,
-                              spaceBetween: 2,
-                            },
-                            640: {
-                              slidesPerView: 4,
-                              spaceBetween: 2,
-                            },
-                            1024: {
-                              slidesPerView: 6,
-                              spaceBetween: 2,
-                            },
-                          }}
-                        >
-                          {allCharacters.map((character, index) => (
-                            <SwiperSlide key={`${character}-${index}`}>
-                              <motion.button
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: index * 0.1 }}
-                                whileHover={{
-                                  y: -6,
-                                  filter: "brightness(1.2)",
-                                  scale: 1.03,
-                                  transition: { duration: 0.2 },
-                                }}
-                                whileTap={{
-                                  scale: 0.95,
-                                  transition: { duration: 0.1 },
-                                }}
-                                onClick={() => handleCharacterClick(character)}
-                                className="bg-gradient-to-r from-purple-500/20 to-pink-500/20 hover:from-purple-500/30 hover:to-pink-500/30 border border-purple-300/30 hover:border-purple-400/50 rounded-xl p-4 text-white flex flex-col items-center justify-between h-[140px] w-[140px] shadow-lg shadow-purple-500/10 transition-all duration-300"
-                              >
-                                {/* Character Image */}
-                                <div className="rounded-full overflow-hidden bg-gray-700 flex items-center justify-center flex-shrink-0 w-16 h-16">
-                                  {characterData[character]?.image ? (
-                                    <img
-                                      src={characterData[character].image}
-                                      alt={character}
-                                      className="w-full h-full object-cover"
-                                      onError={(e) => {
-                                        e.target.style.display = "none";
-                                        e.target.nextSibling.style.display =
-                                          "flex";
-                                      }}
-                                    />
-                                  ) : null}
-                                  <div
-                                    className="w-full h-full bg-purple-600 flex items-center justify-center text-white font-bold text-lg"
-                                    style={{
-                                      display: characterData[character]?.image
-                                        ? "none"
-                                        : "flex",
-                                    }}
-                                  >
-                                    {character
-                                      ?.split(" ")
-                                      .map((name) => name[0])
-                                      .join("")}
-                                  </div>
-                                </div>
-
-                                {/* Character Name */}
-                                <div className="text-center flex-shrink-0 mt-2">
-                                  <span
-                                    className="font-semibold leading-tight block text-sm"
-                                    style={{
-                                      display: "-webkit-box",
-                                      WebkitLineClamp: 2,
-                                      WebkitBoxOrient: "vertical",
-                                      overflow: "hidden",
-                                      textOverflow: "ellipsis",
-                                      wordBreak: "break-word",
-                                    }}
-                                  >
-                                    {character}
-                                  </span>
-                                </div>
-                              </motion.button>
-                            </SwiperSlide>
-                          ))}
-                        </Swiper>
-                      </div>
-
-                      <p className="text-xs text-purple-300/70 mt-4 text-center">
-                        Click any character to share a random quote! Use arrows
-                        to navigate through all {allCharacters.length}{" "}
-                        characters.
-                      </p>
-                    </motion.div>
-
-                    {/* Message Input */}
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.3 }}
-                      className="relative"
-                    >
-                      {/* Emoji Picker */}
-                      <AnimatePresence>
-                        {showEmojiPicker && (
-                          <motion.div
-                            ref={emojiPickerRef}
-                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                            exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                            transition={{ duration: 0.2 }}
-                            className="absolute bottom-full mb-2 left-0 z-50"
-                          >
-                            <EmojiPicker
-                              onEmojiClick={handleEmojiClick}
-                              theme="dark"
-                              width={300}
-                              height={400}
-                              previewConfig={{
-                                showPreview: false,
-                              }}
-                              searchDisabled={false}
-                              skinTonesDisabled={false}
-                              autoFocusSearch={false}
-                            />
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-
-                      <div className="flex gap-2">
-                        <div className="flex-1 relative flex">
-                          <input
-                            type="text"
-                            value={messageInput}
-                            onChange={(e) => setMessageInput(e.target.value)}
-                            onKeyPress={(e) => {
-                              if (e.key === "Enter" && messageInput.trim()) {
-                                sendMessage(messageInput.trim());
-                                setMessageInput("");
-                                setIsUserAtBottom(true);
-                                setShowNewMessageIndicator(false);
-                                setNewMessageCount(0);
-                              }
-                            }}
-                            placeholder="Type your message..."
-                            className="flex-1 px-4 py-3 pr-12 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-400"
-                          />
                           <button
-                            onClick={toggleEmojiPicker}
-                            className="absolute right-2 top-1/2 transform -translate-y-1/2 p-2 hover:bg-white/10 rounded-lg transition-colors"
-                            type="button"
+                            onClick={closeChat}
+                            className="flex items-center space-x-2 bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded-lg transition-colors text-sm w-full sm:w-auto justify-center sm:justify-start text-white"
+                            title="Close chat and return to queue"
                           >
-                            <span className="text-xl">😀</span>
+                            <span>✕</span>
+                            <span>Close</span>
                           </button>
-                        </div>
-                        <button
-                          onClick={() => {
-                            if (messageInput.trim()) {
-                              sendMessage(messageInput.trim());
-                              setMessageInput("");
-                              setIsUserAtBottom(true);
-                              setShowNewMessageIndicator(false);
-                              setNewMessageCount(0);
-                            }
-                          }}
-                          disabled={!messageInput.trim()}
-                          className="px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-all duration-200"
-                        >
-                          Send
-                        </button>
-                      </div>
-                    </motion.div>
-                  </div>
-                </div>
-              ) : (
-                // Queue Interface - When not matched or chat closed
-                <div className="min-h-[80vh] flex flex-col items-center justify-center bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 rounded-xl p-8">
-                  <div className="text-center max-w-md">
-                    <div className="text-6xl mb-6">💬</div>
 
-                    {/* Show reopen chat option if there's an existing match */}
-                    {isMatched && matchData && chatClosed ? (
-                      <>
-                        <h2 className="text-3xl font-bold text-white mb-4">
-                          Chat Available
-                        </h2>
-                        <p className="text-purple-200 mb-8 text-lg">
-                          You have an active conversation with{" "}
-                          {matchData.partner.name}.
-                          {partnerDisconnected ? " (Partner disconnected)" : ""}
-                        </p>
-                        <div className="flex flex-col gap-4">
-                          <button
-                            onClick={reopenChat}
-                            className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-bold py-4 px-8 rounded-xl text-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
-                          >
-                            💬 Reopen Chat
-                          </button>
-                          {!partnerDisconnected && (
+                          <div className="text-center flex-1">
+                            <h1 className="text-xl sm:text-2xl font-bold">
+                              💬 Chatting with{" "}
+                              {matchData?.partner?.name || "Partner"}
+                            </h1>
+                            <p className="text-sm text-purple-200">
+                              {matchData?.partner?.sign &&
+                                zodiacSymbols[matchData.partner.sign]}{" "}
+                              {matchData?.partner?.sign || "Unknown"} •
+                              {partnerDisconnected
+                                ? " Partner disconnected"
+                                : " Real person!"}
+                            </p>
+                          </div>
+
+                          {partnerDisconnected ? (
                             <button
                               onClick={() => {
+                                startNewMatch();
+                                // Optionally navigate back to zodiac compatibility
+                                setActive("zodiac");
+                              }}
+                              className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 px-4 py-2 rounded-lg transition-colors text-sm text-white font-medium"
+                            >
+                              🔍 Back to Matching
+                            </button>
+                          ) : (
+                            <div className="text-green-400 text-sm">
+                              🟢 Connected
+                            </div>
+                          )}
+                        </motion.div>
+
+                        {/* Chat Messages */}
+                        <motion.div
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ delay: 0.2 }}
+                          className="relative"
+                        >
+                          <div
+                            ref={chatContainerRef}
+                            onScroll={handleScroll}
+                            className="bg-white/5 rounded-xl p-4 mb-4 h-96 overflow-y-auto space-y-3"
+                          >
+                            {messages.map((message) => (
+                              <motion.div
+                                key={message.id}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className={`flex ${
+                                  message.type === "sent"
+                                    ? "justify-end"
+                                    : message.type === "system"
+                                    ? "justify-center"
+                                    : "justify-start"
+                                }`}
+                              >
+                                <div
+                                  className={`max-w-xs sm:max-w-md p-3 rounded-lg ${
+                                    message.type === "sent"
+                                      ? "bg-gradient-to-r from-pink-500 to-purple-600 text-white"
+                                      : message.type === "system"
+                                      ? "bg-yellow-500/20 text-yellow-200 text-center text-sm"
+                                      : "bg-white/10 text-white"
+                                  }`}
+                                >
+                                  <p className="text-sm sm:text-base">
+                                    {message.text}
+                                  </p>
+                                  <p className="text-xs opacity-70 mt-1">
+                                    {message.timestamp}
+                                  </p>
+                                </div>
+                              </motion.div>
+                            ))}
+                          </div>
+
+                          {/* New Message Indicator */}
+                          <AnimatePresence>
+                            {showNewMessageIndicator && (
+                              <motion.button
+                                initial={{ opacity: 0, y: 20, scale: 0.8 }}
+                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                exit={{ opacity: 0, y: 20, scale: 0.8 }}
+                                transition={{
+                                  type: "spring",
+                                  stiffness: 300,
+                                  damping: 25,
+                                }}
+                                onClick={handleNewMessageIndicatorClick}
+                                className="absolute bottom-6 right-6 bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white px-4 py-2 rounded-full shadow-lg flex items-center space-x-2 transition-all duration-200 z-10"
+                              >
+                                <span className="text-sm font-medium">
+                                  {newMessageCount} new message
+                                  {newMessageCount > 1 ? "s" : ""}
+                                </span>
+                                <svg
+                                  className="w-4 h-4"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M19 14l-7 7m0 0l-7-7m7 7V3"
+                                  />
+                                </svg>
+                              </motion.button>
+                            )}
+                          </AnimatePresence>
+                        </motion.div>
+
+                        {/* Message Input */}
+                        <motion.div
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.3 }}
+                          className="relative mb-4"
+                        >
+                          {/* Emoji Picker */}
+                          <AnimatePresence>
+                            {showEmojiPicker && (
+                              <motion.div
+                                ref={emojiPickerRef}
+                                initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                                transition={{ duration: 0.2 }}
+                                className="absolute bottom-full mb-2 left-0 z-50"
+                              >
+                                <EmojiPicker
+                                  onEmojiClick={handleEmojiClick}
+                                  theme="dark"
+                                  width={300}
+                                  height={400}
+                                  previewConfig={{
+                                    showPreview: false,
+                                  }}
+                                  searchDisabled={false}
+                                  skinTonesDisabled={false}
+                                  autoFocusSearch={false}
+                                />
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+
+                          <div className="flex gap-2">
+                            <div className="flex-1 relative flex">
+                              <input
+                                type="text"
+                                value={messageInput}
+                                onChange={(e) =>
+                                  setMessageInput(e.target.value)
+                                }
+                                onKeyPress={(e) => {
+                                  if (
+                                    e.key === "Enter" &&
+                                    messageInput.trim()
+                                  ) {
+                                    sendMessage(messageInput.trim());
+                                    setMessageInput("");
+                                    setIsUserAtBottom(true);
+                                    setShowNewMessageIndicator(false);
+                                    setNewMessageCount(0);
+                                  }
+                                }}
+                                placeholder="Type your message..."
+                                className="flex-1 px-4 py-3 pr-12 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-400"
+                              />
+                              <button
+                                onClick={toggleEmojiPicker}
+                                className="absolute right-2 top-1/2 transform -translate-y-1/2 p-2 hover:bg-white/10 rounded-lg transition-colors"
+                                type="button"
+                              >
+                                <span className="text-xl">😀</span>
+                              </button>
+                            </div>
+                            <button
+                              onClick={() => {
+                                if (messageInput.trim()) {
+                                  sendMessage(messageInput.trim());
+                                  setMessageInput("");
+                                  setIsUserAtBottom(true);
+                                  setShowNewMessageIndicator(false);
+                                  setNewMessageCount(0);
+                                }
+                              }}
+                              disabled={!messageInput.trim()}
+                              className="px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-all duration-200"
+                            >
+                              Send
+                            </button>
+                          </div>
+                        </motion.div>
+
+                        {/* Your Zodiac Characters Section */}
+                        <motion.div
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{
+                            delay: 0.4,
+                            duration: 0.5,
+                            ease: [0.4, 0, 0.2, 1],
+                          }}
+                          className="bg-white/5 rounded-xl p-4 mb-4 border border-purple-300/20 backdrop-blur-sm"
+                        >
+                          <div className="flex items-center mb-4">
+                            <span className="text-2xl">
+                              {zodiacSymbols[user?.zodiacChart?.sun]}
+                            </span>
+                            <h3 className="text-lg font-semibold text-purple-200">
+                              Your {user?.zodiacChart?.sun} Characters
+                            </h3>
+                          </div>
+
+                          {/* Character Carousel */}
+                          <div className="character-carousel-container">
+                            <style jsx>{`
+                              .character-carousel-container :global(.swiper) {
+                                padding: 10px 0;
+                                margin: 0 -8px; /* Negative margin to allow slides to touch edges */
+                              }
+
+                              .character-carousel-container
+                                :global(.swiper-slide) {
+                                /* Slides will be sized automatically by slidesPerView */
+                              }
+
+                              .character-carousel-container
+                                :global(.swiper-button-next),
+                              .character-carousel-container
+                                :global(.swiper-button-prev) {
+                                background: rgba(147, 51, 234, 0.7);
+                                backdrop-filter: blur(4px);
+                                border: 1px solid rgba(147, 51, 234, 0.3);
+                                border-radius: 50%;
+                                color: white;
+                                width: 44px;
+                                height: 44px;
+                                margin-top: -22px;
+                                box-shadow: 0 4px 6px -1px rgba(147, 51, 234, 0.25);
+                                transition: all 0.2s ease;
+                              }
+
+                              .character-carousel-container
+                                :global(.swiper-button-next:hover),
+                              .character-carousel-container
+                                :global(.swiper-button-prev:hover) {
+                                background: rgba(147, 51, 234, 0.9);
+                                transform: scale(1.1);
+                              }
+
+                              .character-carousel-container
+                                :global(.swiper-button-next::after),
+                              .character-carousel-container
+                                :global(.swiper-button-prev::after) {
+                                font-size: 16px;
+                                font-weight: bold;
+                              }
+
+                              .character-carousel-container
+                                :global(.swiper-pagination-bullet) {
+                                background: rgba(168, 85, 247, 0.3);
+                                width: 8px;
+                                height: 8px;
+                                margin: 0 4px !important;
+                                transition: all 0.3s ease;
+                              }
+
+                              .character-carousel-container
+                                :global(.swiper-pagination-bullet-active) {
+                                background: rgba(168, 85, 247, 1);
+                                transform: scale(1.2);
+                              }
+
+                              .character-carousel-container
+                                :global(.swiper-pagination) {
+                                position: static !important;
+                                margin-top: 1rem;
+                              }
+                            `}</style>
+                            <Swiper
+                              modules={[Navigation, Pagination]}
+                              spaceBetween={2} // 2px gap between slides
+                              slidesPerView={6} // Show exactly 6 slides at a time
+                              navigation={allCharacters.length > 6}
+                              pagination={
+                                allCharacters.length > 6
+                                  ? { clickable: true }
+                                  : false
+                              }
+                              loop={true} // Enable infinite cycling
+                              grabCursor={true}
+                              breakpoints={{
+                                320: {
+                                  slidesPerView: 2,
+                                  spaceBetween: 2,
+                                },
+                                640: {
+                                  slidesPerView: 4,
+                                  spaceBetween: 2,
+                                },
+                                1024: {
+                                  slidesPerView: 6,
+                                  spaceBetween: 2,
+                                },
+                              }}
+                            >
+                              {allCharacters.map((character, index) => (
+                                <SwiperSlide key={`${character}-${index}`}>
+                                  <motion.button
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: index * 0.1 }}
+                                    whileHover={{
+                                      y: -6,
+                                      filter: "brightness(1.2)",
+                                      scale: 1.03,
+                                      transition: { duration: 0.2 },
+                                    }}
+                                    whileTap={{
+                                      scale: 0.95,
+                                      transition: { duration: 0.1 },
+                                    }}
+                                    onClick={() =>
+                                      handleCharacterClick(character)
+                                    }
+                                    className="bg-gradient-to-r from-purple-500/20 to-pink-500/20 hover:from-purple-500/30 hover:to-pink-500/30 border border-purple-300/30 hover:border-purple-400/50 rounded-xl p-4 text-white flex flex-col items-center justify-between h-[140px] w-[140px] shadow-lg shadow-purple-500/10 transition-all duration-300"
+                                  >
+                                    {/* Character Image */}
+                                    <div className="rounded-full overflow-hidden bg-gray-700 flex items-center justify-center flex-shrink-0 w-16 h-16">
+                                      {characterData[character]?.image ? (
+                                        <img
+                                          src={characterData[character].image}
+                                          alt={character}
+                                          className="w-full h-full object-cover"
+                                          onError={(e) => {
+                                            e.target.style.display = "none";
+                                            e.target.nextSibling.style.display =
+                                              "flex";
+                                          }}
+                                        />
+                                      ) : null}
+                                      <div
+                                        className="w-full h-full bg-purple-600 flex items-center justify-center text-white font-bold text-lg"
+                                        style={{
+                                          display: characterData[character]
+                                            ?.image
+                                            ? "none"
+                                            : "flex",
+                                        }}
+                                      >
+                                        {character
+                                          ?.split(" ")
+                                          .map((name) => name[0])
+                                          .join("")}
+                                      </div>
+                                    </div>
+
+                                    {/* Character Name */}
+                                    <div className="text-center flex-shrink-0 mt-2">
+                                      <span
+                                        className="font-semibold leading-tight block text-sm"
+                                        style={{
+                                          display: "-webkit-box",
+                                          WebkitLineClamp: 2,
+                                          WebkitBoxOrient: "vertical",
+                                          overflow: "hidden",
+                                          textOverflow: "ellipsis",
+                                          wordBreak: "break-word",
+                                        }}
+                                      >
+                                        {character}
+                                      </span>
+                                    </div>
+                                  </motion.button>
+                                </SwiperSlide>
+                              ))}
+                            </Swiper>
+                          </div>
+
+                          <p className="text-xs text-purple-300/70 mt-4 text-center">
+                            Click any character to share a random quote! Use
+                            arrows to navigate through all{" "}
+                            {allCharacters.length} characters.
+                          </p>
+                        </motion.div>
+                      </div>
+                    </div>
+                  ) : (
+                    // Queue Interface - When not matched or chat closed
+                    <div className="min-h-[80vh] flex flex-col items-center justify-center bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 rounded-xl p-8">
+                      <div className="text-center max-w-md">
+                        <div className="text-6xl mb-6">💬</div>
+
+                        {/* Show reopen chat option if there's an existing match */}
+                        {isMatched && matchData && chatClosed ? (
+                          <>
+                            <h2 className="text-3xl font-bold text-white mb-4">
+                              Chat Available
+                            </h2>
+                            <p className="text-purple-200 mb-8 text-lg">
+                              You have an active conversation with{" "}
+                              {matchData.partner.name}.
+                              {partnerDisconnected
+                                ? " (Partner disconnected)"
+                                : ""}
+                            </p>
+                            <div className="flex flex-col gap-4">
+                              <button
+                                onClick={reopenChat}
+                                className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-bold py-4 px-8 rounded-xl text-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                              >
+                                💬 Reopen Chat
+                              </button>
+                              {!partnerDisconnected && (
+                                <button
+                                  onClick={() => {
+                                    if (isQueuing) {
+                                      cancelQueue();
+                                    } else {
+                                      const userData = {
+                                        sign: user.zodiacChart.sun,
+                                        moon: user.zodiacChart.moon,
+                                        rising: user.zodiacChart.rising,
+                                        name: user.username,
+                                      };
+                                      joinQueue(userData);
+                                    }
+                                  }}
+                                  className="bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white font-bold py-3 px-6 rounded-xl text-base shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                                >
+                                  {isQueuing
+                                    ? "🔄 Cancel Queue"
+                                    : "🌟 Find New Match 🌟"}
+                                </button>
+                              )}
+                              {partnerDisconnected && (
+                                <button
+                                  onClick={() => {
+                                    startNewMatch();
+                                    const userData = {
+                                      sign: user.zodiacChart.sun,
+                                      moon: user.zodiacChart.moon,
+                                      rising: user.zodiacChart.rising,
+                                      name: user.username,
+                                    };
+                                    joinQueue(userData);
+                                  }}
+                                  className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-3 px-6 rounded-xl text-base shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                                >
+                                  🔍 Start Fresh Match
+                                </button>
+                              )}
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <h2 className="text-3xl font-bold text-white mb-4">
+                              {isQueuing
+                                ? "Finding Your Match..."
+                                : "Find Your Cosmic Match"}
+                            </h2>
+                            <p className="text-purple-200 mb-8 text-lg">
+                              {isQueuing
+                                ? "We're searching for someone who shares your zodiac energy..."
+                                : "Connect with someone who shares your zodiac energy and discover your cosmic compatibility!"}
+                            </p>
+                            {isQueuing && (
+                              <div className="mb-6">
+                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto"></div>
+                              </div>
+                            )}
+                            <button
+                              onClick={() => {
+                                if (!user) {
+                                  onLogin?.();
+                                  return;
+                                }
+
                                 if (isQueuing) {
                                   cancelQueue();
                                 } else {
@@ -3517,80 +3605,21 @@ export default function MainContent({ active, user, onLogin, setActive }) {
                                   joinQueue(userData);
                                 }
                               }}
-                              className="bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white font-bold py-3 px-6 rounded-xl text-base shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                              className="bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white font-bold py-4 px-8 rounded-xl text-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
                             >
-                              {isQueuing
-                                ? "🔄 Cancel Queue"
-                                : "🌟 Find New Match 🌟"}
+                              {isQueuing ? "🔄 Cancel Queue" : "🌟 Queue Up 🌟"}
                             </button>
-                          )}
-                          {partnerDisconnected && (
-                            <button
-                              onClick={() => {
-                                startNewMatch();
-                                const userData = {
-                                  sign: user.zodiacChart.sun,
-                                  moon: user.zodiacChart.moon,
-                                  rising: user.zodiacChart.rising,
-                                  name: user.username,
-                                };
-                                joinQueue(userData);
-                              }}
-                              className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-3 px-6 rounded-xl text-base shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
-                            >
-                              🔍 Start Fresh Match
-                            </button>
-                          )}
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <h2 className="text-3xl font-bold text-white mb-4">
-                          {isQueuing
-                            ? "Finding Your Match..."
-                            : "Find Your Cosmic Match"}
-                        </h2>
-                        <p className="text-purple-200 mb-8 text-lg">
-                          {isQueuing
-                            ? "We're searching for someone who shares your zodiac energy..."
-                            : "Connect with someone who shares your zodiac energy and discover your cosmic compatibility!"}
-                        </p>
-                        {isQueuing && (
-                          <div className="mb-6">
-                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto"></div>
-                          </div>
+                            <p className="text-purple-300 mt-4 text-sm">
+                              Based on your {user.zodiacChart?.sun || "zodiac"}{" "}
+                              sign
+                            </p>
+                          </>
                         )}
-                        <button
-                          onClick={() => {
-                            if (!user) {
-                              onLogin?.();
-                              return;
-                            }
-
-                            if (isQueuing) {
-                              cancelQueue();
-                            } else {
-                              const userData = {
-                                sign: user.zodiacChart.sun,
-                                moon: user.zodiacChart.moon,
-                                rising: user.zodiacChart.rising,
-                                name: user.username,
-                              };
-                              joinQueue(userData);
-                            }
-                          }}
-                          className="bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white font-bold py-4 px-8 rounded-xl text-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
-                        >
-                          {isQueuing ? "🔄 Cancel Queue" : "🌟 Queue Up 🌟"}
-                        </button>
-                        <p className="text-purple-300 mt-4 text-sm">
-                          Based on your {user.zodiacChart?.sun || "zodiac"} sign
-                        </p>
-                      </>
-                    )}
-                  </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
             </>
           ) : (
             <AuthPrompt feature="Chat & Matching" />
