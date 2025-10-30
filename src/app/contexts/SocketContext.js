@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState, useRef } from "react";
 import { io } from "socket.io-client";
 
 const SocketContext = createContext();
@@ -18,6 +18,14 @@ export const SocketProvider = ({ children, onMatchFound, user }) => {
   const [isConnected, setIsConnected] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isQueuing, setIsQueuing] = useState(false);
+
+  // Use ref to store onMatchFound to prevent useEffect dependency issues
+  const onMatchFoundRef = useRef(onMatchFound);
+
+  // Update the ref when onMatchFound changes
+  useEffect(() => {
+    onMatchFoundRef.current = onMatchFound;
+  }, [onMatchFound]);
   const [chatClosed, setChatClosed] = useState(() => {
     // Restore chat closed state from localStorage
     if (typeof window !== "undefined") {
@@ -142,7 +150,6 @@ export const SocketProvider = ({ children, onMatchFound, user }) => {
       reconnectionDelayMax: 5000,
       maxReconnectionAttempts: 5,
       timeout: 20000,
-      forceNew: true,
     });
 
     socketInstance.on("connect", () => {
@@ -281,11 +288,11 @@ export const SocketProvider = ({ children, onMatchFound, user }) => {
 
       // Navigate to chat section when match is found
       console.log("Attempting to navigate to chat...");
-      if (onMatchFound) {
+      if (onMatchFoundRef.current) {
         // Use setTimeout to ensure state updates complete first
         setTimeout(() => {
           console.log("Calling onMatchFound callback");
-          onMatchFound();
+          onMatchFoundRef.current();
         }, 100);
       } else {
         console.log("No onMatchFound callback provided");
@@ -312,6 +319,19 @@ export const SocketProvider = ({ children, onMatchFound, user }) => {
 
     socketInstance.on("message-sent", (messageData) => {
       console.log("Message sent confirmation:", messageData);
+    });
+
+    socketInstance.on("message-error", (error) => {
+      console.error("Message sending error:", error.message);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `system-${Date.now()}`,
+          type: "system",
+          text: `Message error: ${error.message}`,
+          timestamp: new Date().toLocaleTimeString(),
+        },
+      ]);
     });
 
     socketInstance.on("partner-disconnected", () => {
@@ -584,9 +604,10 @@ export const SocketProvider = ({ children, onMatchFound, user }) => {
     setSocket(socketInstance);
 
     return () => {
+      console.log("SocketContext cleanup - disconnecting socket");
       socketInstance.disconnect();
     };
-  }, [onMatchFound]);
+  }, []); // Remove onMatchFound dependency to prevent socket recreation
 
   const joinQueue = (userData) => {
     if (socket) {

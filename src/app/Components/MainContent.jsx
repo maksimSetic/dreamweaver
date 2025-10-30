@@ -271,6 +271,9 @@ export default function MainContent({ active, user, onLogin, setActive }) {
   const [messageInput, setMessageInput] = useState("");
   const [usedQuotes, setUsedQuotes] = useState({});
 
+  // Chat preservation state
+  const [showChatNotification, setShowChatNotification] = useState(false);
+
   // Emoji picker state
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const emojiPickerRef = useRef(null);
@@ -320,11 +323,39 @@ export default function MainContent({ active, user, onLogin, setActive }) {
 
   // Force navigation to chat only when match modal should be shown (new match)
   useEffect(() => {
-    if (isMatched && matchData && !chatClosed && showMatchFoundModal) {
+    if (
+      isMatched &&
+      matchData &&
+      !chatClosed &&
+      showMatchFoundModal &&
+      active !== "chat"
+    ) {
       console.log("New match found, navigating to chat");
       setActive("chat");
     }
-  }, [isMatched, matchData, chatClosed, showMatchFoundModal, setActive]);
+  }, [
+    isMatched,
+    matchData,
+    chatClosed,
+    showMatchFoundModal,
+    setActive,
+    active,
+  ]);
+
+  // Show chat notification when there's an active chat but user is on different section
+  useEffect(() => {
+    const hasActiveChat =
+      isMatched && matchData && !chatClosed && !partnerDisconnected;
+    const isOnChatSection = active === "chat";
+
+    // Only show notification if there's an active chat AND user is not on chat section
+    // AND the notification hasn't been manually dismissed
+    if (hasActiveChat && !isOnChatSection) {
+      setShowChatNotification(true);
+    } else {
+      setShowChatNotification(false);
+    }
+  }, [isMatched, matchData, chatClosed, partnerDisconnected, active]);
 
   // Set initial load flag to false after first render
   useEffect(() => {
@@ -3068,6 +3099,40 @@ export default function MainContent({ active, user, onLogin, setActive }) {
 
   return (
     <main className="flex-1 p-6 md:p-10 overflow-auto">
+      {/* Active Chat Notification */}
+      <AnimatePresence>
+        {showChatNotification && (
+          <motion.div
+            initial={{ opacity: 0, y: -50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -50 }}
+            className="fixed top-4 right-4 z-50 bg-gradient-to-r from-purple-600 to-blue-600 text-white p-4 rounded-lg shadow-lg border border-purple-400"
+          >
+            <div className="flex items-center space-x-3">
+              <div className="flex items-center space-x-2">
+                <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+                <span className="font-medium">Active Chat</span>
+              </div>
+              <div className="text-sm opacity-90">
+                with {matchData?.partner?.name || "Partner"}
+              </div>
+              <button
+                onClick={() => setActive("chat")}
+                className="bg-white/20 hover:bg-white/30 px-3 py-1 rounded text-sm transition-colors"
+              >
+                Return to Chat
+              </button>
+              <button
+                onClick={() => setShowChatNotification(false)}
+                className="text-white/70 hover:text-white p-1"
+              >
+                ✕
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {active === "zodiac" && (
         <div>
           <ZodiacCompatibility user={user} onLogin={onLogin} />

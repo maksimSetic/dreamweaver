@@ -121,6 +121,38 @@ io.on("connection", (socket) => {
 
   // Handle user joining queue
   socket.on("join-queue", (userData) => {
+    // Check if user is already in an active match and clean it up
+    if (socket.userId) {
+      console.log(
+        `User ${socket.userId} is joining new queue, cleaning up existing match`
+      );
+
+      // Remove from any active matches
+      for (const [matchId, match] of activeMatches.entries()) {
+        if (
+          match.user1.id === socket.userId ||
+          match.user2.id === socket.userId
+        ) {
+          console.log(`Removing user from active match ${matchId}`);
+
+          // Notify the other user that partner left
+          const otherUser =
+            match.user1.id === socket.userId ? match.user2 : match.user1;
+          const otherSocketId = userSockets.get(otherUser.id);
+          if (otherSocketId) {
+            io.to(otherSocketId).emit("partner-disconnected");
+          }
+
+          // Remove the match
+          activeMatches.delete(matchId);
+          break;
+        }
+      }
+
+      // Remove from user sockets map with old ID
+      userSockets.delete(socket.userId);
+    }
+
     const userId = generateId();
     const user = {
       id: userId,
@@ -166,6 +198,8 @@ io.on("connection", (socket) => {
   // Handle sending messages
   socket.on("send-message", (data) => {
     console.log("Received message data:", data);
+    console.log("Socket userId:", socket.userId);
+
     const { roomId, matchId, message } = data;
 
     // Support both roomId (client sends) and matchId for compatibility
@@ -173,6 +207,25 @@ io.on("connection", (socket) => {
     const match = activeMatches.get(actualMatchId);
 
     if (match) {
+      console.log("Match found for message:", {
+        matchId: actualMatchId,
+        user1: match.user1.id,
+        user2: match.user2.id,
+        senderId: socket.userId,
+      });
+
+      // Verify the sender is part of this match
+      if (
+        match.user1.id !== socket.userId &&
+        match.user2.id !== socket.userId
+      ) {
+        console.log("Sender not part of this match!");
+        socket.emit("message-error", {
+          message: "You are not part of this match",
+        });
+        return;
+      }
+
       const messageData = {
         id: generateId(),
         senderId: socket.userId,
@@ -212,6 +265,7 @@ io.on("connection", (socket) => {
       const otherSocketId = userSockets.get(otherUserId);
 
       console.log(`Sending message from ${socket.userId} to ${otherUserId}`);
+      console.log("Other user socket ID:", otherSocketId);
 
       if (otherSocketId) {
         io.to(otherSocketId).emit("receive-message", messageData);
@@ -226,6 +280,7 @@ io.on("connection", (socket) => {
     } else {
       console.log("Match not found for matchId:", actualMatchId);
       console.log("Active matches:", Array.from(activeMatches.keys()));
+      socket.emit("message-error", { message: "Match not found" });
     }
   });
 
@@ -433,35 +488,50 @@ io.on("connection", (socket) => {
   // Handle sending a chat request to a friend
   socket.on("send-chat-request", async (data) => {
     const { toUsername } = data;
+    console.log(
+      `Chat request received: ${socket.id} wants to chat with ${toUsername}`
+    );
+
+    // Debug: Show all registered users
+    console.log("Currently registered users:");
+    registeredUsers.forEach((userData, socketId) => {
+      console.log(`  ${socketId}: ${userData.username}`);
+    });
 
     if (!socket.isRegistered) {
+      console.log("Chat request rejected: User not registered");
       socket.emit("chat-request-error", { message: "User not registered" });
       return;
     }
 
     try {
       const currentUser = registeredUsers.get(socket.id);
+      console.log("Current user sending request:", currentUser?.username);
 
       // Get friend user data from database
       const friendUser = await db.getUserByUsername(toUsername);
 
       if (!friendUser) {
+        console.log("Chat request rejected: Friend user not found");
         socket.emit("chat-request-error", { message: "Friend user not found" });
         return;
       }
+
+      console.log("Friend user found:", friendUser.username);
 
       // Check if they're already friends (optional check)
       // For now, allow chat requests to any user
 
       const requestData = {
         fromUsername: currentUser.username,
-        fromSign: currentUser.sun_sign,
+        fromSign: currentUser.zodiacChart?.sun || "Unknown",
         toUsername: toUsername,
         toSign: friendUser.sun_sign,
         timestamp: new Date().toISOString(),
       };
 
       // Confirm to sender
+      console.log("Sending chat-request-sent to sender:", requestData);
       socket.emit("chat-request-sent", requestData);
 
       // Notify the target user if they're online
@@ -471,10 +541,15 @@ io.on("connection", (socket) => {
 
       if (friendSocket) {
         const [friendSocketId] = friendSocket;
+        console.log(
+          `Friend ${toUsername} is online, sending chat-request-received to socket ${friendSocketId}`
+        );
         io.to(friendSocketId).emit("chat-request-received", {
           fromUsername: currentUser.username,
-          fromSign: currentUser.sun_sign,
+          fromSign: currentUser.zodiacChart?.sun || "Unknown",
         });
+      } else {
+        console.log(`Friend ${toUsername} is not online`);
       }
 
       console.log(
@@ -497,9 +572,14 @@ io.on("connection", (socket) => {
 
     try {
       const currentUser = registeredUsers.get(socket.id);
+      console.log("Current user data:", JSON.stringify(currentUser, null, 2));
 
       // Get the requester's user data from database
       const requesterUser = await db.getUserByUsername(fromUsername);
+      console.log(
+        "Requester user data:",
+        JSON.stringify(requesterUser, null, 2)
+      );
 
       if (!requesterUser) {
         socket.emit("chat-request-error", {
@@ -509,27 +589,36 @@ io.on("connection", (socket) => {
       }
 
       // Create persistent chat between the two users
-      const chat = await db.createPersistentChat(
-        {
-          id: requesterUser.id,
-          username: requesterUser.username,
-          zodiacChart: {
-            sun: requesterUser.sun_sign,
-            moon: requesterUser.moon_sign,
-            rising: requesterUser.rising_sign,
-          },
+      const chatId = generateId(); // Generate unique chat ID
+
+      // Prepare user data with proper zodiac chart access
+      const user1Data = {
+        id: requesterUser.id,
+        username: requesterUser.username,
+        sun_sign: requesterUser.sun_sign,
+        zodiacChart: {
+          sun: requesterUser.sun_sign,
+          moon: requesterUser.moon_sign,
+          rising: requesterUser.rising_sign,
         },
-        {
-          id: currentUser.id,
-          username: currentUser.username,
-          zodiacChart: {
-            sun: currentUser.sun_sign,
-            moon: currentUser.moon_sign,
-            rising: currentUser.rising_sign,
-          },
+      };
+
+      const user2Data = {
+        id: currentUser.id,
+        username: currentUser.username,
+        sun_sign: currentUser.zodiacChart?.sun,
+        zodiacChart: {
+          sun: currentUser.zodiacChart?.sun,
+          moon: currentUser.zodiacChart?.moon,
+          rising: currentUser.zodiacChart?.rising,
         },
-        null
-      );
+      };
+
+      console.log("Prepared user data for chat creation:");
+      console.log("User1 (requester):", JSON.stringify(user1Data, null, 2));
+      console.log("User2 (current):", JSON.stringify(user2Data, null, 2));
+
+      const chat = await db.createPersistentChat(user1Data, user2Data, chatId);
 
       // Notify the accepter
       socket.emit("chat-request-accepted", {
@@ -622,14 +711,15 @@ io.on("connection", (socket) => {
       }
 
       // Create or get existing chat with this friend using proper user data
+      const chatId = generateId(); // Generate unique chat ID
       const chat = await db.createPersistentChat(
         {
           id: currentUser.id,
           username: currentUser.username,
           zodiacChart: {
-            sun: currentUser.sun_sign,
-            moon: currentUser.moon_sign,
-            rising: currentUser.rising_sign,
+            sun: currentUser.zodiacChart.sun,
+            moon: currentUser.zodiacChart.moon,
+            rising: currentUser.zodiacChart.rising,
           },
         },
         {
@@ -641,7 +731,7 @@ io.on("connection", (socket) => {
             rising: friendUser.rising_sign,
           },
         },
-        null // Let the database generate the chat ID
+        chatId
       );
 
       socket.emit("friend-chat-started", {

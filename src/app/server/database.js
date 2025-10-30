@@ -285,6 +285,17 @@ class DatabaseManager {
   // Create or get a persistent chat between two registered users
   async createPersistentChat(user1Data, user2Data, chatId) {
     return new Promise((resolve, reject) => {
+      // Validate that chatId is provided
+      if (!chatId) {
+        reject(new Error("Chat ID is required for creating persistent chat"));
+        return;
+      }
+
+      console.log("Creating persistent chat with:");
+      console.log("User1 data:", JSON.stringify(user1Data, null, 2));
+      console.log("User2 data:", JSON.stringify(user2Data, null, 2));
+      console.log("Chat ID:", chatId);
+
       // Check if chat already exists between these users
       const checkExisting = `
         SELECT * FROM persistent_chats 
@@ -315,6 +326,19 @@ class DatabaseManager {
           ) VALUES (?, ?, ?, ?, ?, ?, ?)
         `;
 
+          // Extract zodiac signs with fallbacks
+          const user1Sign =
+            user1Data.zodiacChart?.sun || user1Data.sun_sign || "Unknown";
+          const user2Sign =
+            user2Data.zodiacChart?.sun || user2Data.sun_sign || "Unknown";
+
+          console.log(
+            "Extracted signs - User1:",
+            user1Sign,
+            "User2:",
+            user2Sign
+          );
+
           this.db.run(
             insertChat,
             [
@@ -323,8 +347,8 @@ class DatabaseManager {
               user2Data.id,
               user1Data.username,
               user2Data.username,
-              user1Data.zodiacChart.sun,
-              user2Data.zodiacChart.sun,
+              user1Sign,
+              user2Sign,
             ],
             function (err) {
               if (err) {
@@ -339,8 +363,8 @@ class DatabaseManager {
                   user2_id: user2Data.id,
                   user1_username: user1Data.username,
                   user2_username: user2Data.username,
-                  user1_sign: user1Data.zodiacChart.sun,
-                  user2_sign: user2Data.zodiacChart.sun,
+                  user1_sign: user1Sign,
+                  user2_sign: user2Sign,
                   created_at: new Date().toISOString(),
                 });
               }
@@ -390,13 +414,17 @@ class DatabaseManager {
         ) VALUES (?, ?, ?, ?, ?, ?)
       `;
 
-      this.db.run(
+      const db = this.db; // Store reference to avoid context issues
+
+      db.run(
         insertMessage,
         [messageId, chatId, senderId, senderUsername, messageText, messageType],
         function (err) {
           if (err) {
             reject(new Error("Failed to save message: " + err.message));
           } else {
+            const insertedId = this.lastID; // 'this' here refers to the statement
+
             // Update last_message_at in persistent_chats
             const updateChat = `
               UPDATE persistent_chats 
@@ -404,7 +432,7 @@ class DatabaseManager {
               WHERE chat_id = ?
             `;
 
-            this.db.run(updateChat, [chatId], (updateErr) => {
+            db.run(updateChat, [chatId], (updateErr) => {
               if (updateErr) {
                 console.error(
                   "Error updating chat timestamp:",
@@ -414,7 +442,7 @@ class DatabaseManager {
             });
 
             resolve({
-              id: this.lastID,
+              id: insertedId,
               message_id: messageId,
               chat_id: chatId,
               sender_id: senderId,
@@ -476,7 +504,9 @@ class DatabaseManager {
           return;
         }
 
-        this.db.run(updateQuery, [chatId], function (err) {
+        const db = this.db; // Store reference to avoid context issues
+
+        db.run(updateQuery, [chatId], function (err) {
           if (err) {
             reject(new Error("Failed to delete chat: " + err.message));
           } else {
@@ -486,13 +516,11 @@ class DatabaseManager {
               WHERE chat_id = ? AND deleted_by_user1 = TRUE AND deleted_by_user2 = TRUE
             `;
 
-            this.db.get(checkBothDeleted, [chatId], (err, deletedChat) => {
+            db.get(checkBothDeleted, [chatId], (err, deletedChat) => {
               if (deletedChat) {
                 // Both users deleted, remove messages and chat record
-                this.db.run(`DELETE FROM chat_messages WHERE chat_id = ?`, [
-                  chatId,
-                ]);
-                this.db.run(`DELETE FROM persistent_chats WHERE chat_id = ?`, [
+                db.run(`DELETE FROM chat_messages WHERE chat_id = ?`, [chatId]);
+                db.run(`DELETE FROM persistent_chats WHERE chat_id = ?`, [
                   chatId,
                 ]);
               }
