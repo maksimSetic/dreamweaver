@@ -862,10 +862,13 @@ function findMatch(newUser) {
     // Create a match
     const matchId = generateId();
 
-    // Check if both users are registered for persistent chat
+    // Check if both users are registered for potential persistent chat capability
     const user1RegisteredData = registeredUsers.get(newUser.socketId);
     const user2RegisteredData = registeredUsers.get(matchedUser.socketId);
-    const isPersistent = user1RegisteredData && user2RegisteredData;
+
+    // For now, create temporary matches by default to allow users to have temporary conversations
+    // They can later choose to make it persistent if they want to continue the conversation
+    const isPersistent = false; // Always create temporary matches initially
 
     const match = {
       id: matchId,
@@ -874,18 +877,20 @@ function findMatch(newUser) {
       messages: [],
       createdAt: new Date(),
       isPersistent: isPersistent,
-      registeredUsers: isPersistent
-        ? {
-            user1: user1RegisteredData,
-            user2: user2RegisteredData,
-          }
-        : null,
+      registeredUsers:
+        user1RegisteredData && user2RegisteredData
+          ? {
+              user1: user1RegisteredData,
+              user2: user2RegisteredData,
+            }
+          : null,
     };
 
     activeMatches.set(matchId, match);
 
-    // Create persistent chat in database if both users are registered
-    if (isPersistent) {
+    // Don't create persistent chat in database for temporary matches
+    // Users can later convert temporary matches to persistent if they choose
+    if (isPersistent && user1RegisteredData && user2RegisteredData) {
       db.createPersistentChat(user1RegisteredData, user2RegisteredData, matchId)
         .then((persistentChat) => {
           console.log("Persistent chat created:", persistentChat.chat_id);

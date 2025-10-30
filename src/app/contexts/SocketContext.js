@@ -243,9 +243,15 @@ export const SocketProvider = ({ children, onMatchFound, user }) => {
 
       // Store original temporary match data if it's not persistent
       if (!data.isPersistent) {
+        // This is a new temporary match, replace any existing temporary match
         setOriginalTempMatch(data);
       } else {
-        setOriginalTempMatch(null); // Clear if persistent
+        // This is a new persistent match, only clear temp match if user wants to replace it
+        // For now, let the user decide by keeping the temp match available
+        // They can manually start a new match if they want to clear it
+        console.log(
+          "New persistent match found, but keeping existing temporary match available"
+        );
       }
 
       // Set currentChatId based on match type
@@ -780,26 +786,44 @@ export const SocketProvider = ({ children, onMatchFound, user }) => {
   // Open a persistent chat
   const openPersistentChat = (chat, currentUser) => {
     console.log("Opening persistent chat:", chat, "Current user:", currentUser);
+
+    // If we're currently in a temporary match and switching to a different chat,
+    // we need to preserve the temporary match state but not interfere with the new chat
+    const isCurrentlyInTempMatch =
+      currentChatId && currentChatId.startsWith("match-") && originalTempMatch;
+    const isSwitchingToTempMatch = chat.isTemporaryMatch;
+
+    console.log("Chat transition:", {
+      isCurrentlyInTempMatch,
+      isSwitchingToTempMatch,
+      currentChatId,
+      newChatId: chat.chat_id,
+    });
+
     setCurrentChatId(chat.chat_id);
     setIsMatched(true);
     setChatClosed(false);
     setPartnerDisconnected(false);
 
-    // Determine partner info based on current user
-    const isUser1 = chat.user1_username === currentUser?.username;
-    const partnerName = isUser1 ? chat.user2_username : chat.user1_username;
-    const partnerSign = isUser1 ? chat.user2_sign : chat.user1_sign;
+    // Only set match data for non-temporary matches
+    // Temporary matches will restore their original data later in the function
+    if (!chat.isTemporaryMatch) {
+      // Determine partner info based on current user
+      const isUser1 = chat.user1_username === currentUser?.username;
+      const partnerName = isUser1 ? chat.user2_username : chat.user1_username;
+      const partnerSign = isUser1 ? chat.user2_sign : chat.user1_sign;
 
-    console.log("Partner info:", { partnerName, partnerSign, isUser1 });
+      console.log("Partner info:", { partnerName, partnerSign, isUser1 });
 
-    setMatchData({
-      matchId: chat.chat_id,
-      isPersistent: true,
-      partner: {
-        name: partnerName,
-        sign: partnerSign,
-      },
-    });
+      setMatchData({
+        matchId: chat.chat_id,
+        isPersistent: true,
+        partner: {
+          name: partnerName,
+          sign: partnerSign,
+        },
+      });
+    }
 
     // Check if this is a dummy chat for testing
     if (chat.chat_id === "dummy-chat-1") {
@@ -888,13 +912,28 @@ export const SocketProvider = ({ children, onMatchFound, user }) => {
       console.log(
         "Opening temporary match chat, restoring original match data and messages"
       );
+      console.log("Current states before restoration:", {
+        originalTempMatch,
+        originalTempMessages: originalTempMessages?.length || 0,
+        currentChatId: chat.chat_id,
+      });
+
       if (originalTempMatch) {
+        // Restore the original temporary match data instead of the persistent chat data
         setMatchData(originalTempMatch);
         setIsMatched(true);
         setChatClosed(false);
         setPartnerDisconnected(false);
         // Restore the original temporary match messages
         setMessages(originalTempMessages);
+        console.log("Successfully restored temporary match:", {
+          matchData: originalTempMatch,
+          messagesCount: originalTempMessages?.length || 0,
+        });
+      } else {
+        console.warn(
+          "Attempted to open temporary match but originalTempMatch is null"
+        );
       }
     } else {
       // Load messages for real chats

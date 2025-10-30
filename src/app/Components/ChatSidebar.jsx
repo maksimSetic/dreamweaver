@@ -213,8 +213,85 @@ export default function ChatSidebar({ user, onNewMatchClick, onFriendsClick }) {
         {/* Chat List */}
         <div className="flex-1 overflow-y-auto">
           <div className="space-y-1 p-2">
-            {/* Current Temporary Match - Only show for non-persistent matches */}
-            {originalTempMatch && !chatClosed && (
+            {/* Debug info for temporary match */}
+            {originalTempMatch ? (
+              <div className="text-xs text-green-400 p-1 bg-green-900/20 rounded mb-2">
+                ✅ Temp Match Available: {originalTempMatch.partner?.name} | Closed: {chatClosed ? 'Yes' : 'No'} | Chat ID: {currentChatId}
+              </div>
+            ) : (
+              <div className="text-xs text-red-400 p-1 bg-red-900/20 rounded mb-2">
+                ❌ No Temp Match Available
+              </div>
+            )}
+
+            {/* TEMPORARY MATCH SECTION - Always visible when available */}
+            {originalTempMatch && (
+              <div className="mb-4">
+                <div className="text-xs font-semibold text-purple-400 mb-2 px-2">
+                  🔥 ACTIVE TEMPORARY MATCH
+                </div>
+                <div
+                  className={`relative group p-3 rounded-lg cursor-pointer transition-all duration-200 border border-purple-400/50 ${
+                    currentChatId === `match-${originalTempMatch.matchId}`
+                      ? "bg-gradient-to-r from-purple-600/30 to-purple-500/30 shadow-lg border-purple-400"
+                      : "bg-slate-800 hover:bg-slate-700 border-purple-400/30"
+                  }`}
+                  onClick={() => {
+                    console.log("Temporary match clicked:", {
+                      originalTempMatch,
+                      currentChatId,
+                      targetChatId: `match-${originalTempMatch.matchId}`,
+                      chatClosed
+                    });
+                    // Create a temporary match chat object
+                    const tempMatchChat = {
+                      chat_id: `match-${originalTempMatch.matchId}`,
+                      user1_username: user?.username || "You",
+                      user2_username:
+                        originalTempMatch.partner?.name || "Partner",
+                      user1_sign: user?.zodiacChart?.sun || "Aries",
+                      user2_sign:
+                        originalTempMatch.partner?.zodiacChart?.sun || "Aries",
+                      last_message_at: new Date().toISOString(),
+                      isTemporaryMatch: true, // Flag to identify this as a temporary match
+                    };
+                    console.log("Opening temp match chat:", tempMatchChat);
+                    openPersistentChat(tempMatchChat, user);
+                  }}
+                >
+                  <div className="flex items-center space-x-3">
+                    <div className="text-xl">
+                      {zodiacSymbols[
+                        originalTempMatch.partner?.zodiacChart?.sun
+                      ] || "⭐"}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium text-white truncate">
+                        {originalTempMatch.partner?.name || "Partner"}
+                        <span className="ml-2 text-xs bg-purple-500 px-2 py-0.5 rounded-full animate-pulse">
+                          TEMP
+                        </span>
+                      </div>
+                      <div className="text-sm text-slate-300 truncate">
+                        {originalTempMatch.partner?.zodiacChart?.sun || "Unknown"}{" "}
+                        • Temporary match
+                      </div>
+                    </div>
+                    <div className="text-xs text-purple-400">
+                      <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* SEPARATOR */}
+            {originalTempMatch && (
+              <div className="border-t border-slate-700 my-4"></div>
+            )}
+            
+            {/* Current Temporary Match - Always show if exists to debug */}
+            {false && originalTempMatch && (
               <div
                 className={`relative group p-3 rounded-lg cursor-pointer transition-all duration-200 border border-purple-400/30 ${
                   currentChatId === `match-${originalTempMatch.matchId}`
@@ -222,6 +299,12 @@ export default function ChatSidebar({ user, onNewMatchClick, onFriendsClick }) {
                     : "bg-slate-800 hover:bg-slate-700"
                 }`}
                 onClick={() => {
+                  console.log("Temporary match clicked:", {
+                    originalTempMatch,
+                    currentChatId,
+                    targetChatId: `match-${originalTempMatch.matchId}`,
+                    chatClosed
+                  });
                   // Create a temporary match chat object
                   const tempMatchChat = {
                     chat_id: `match-${originalTempMatch.matchId}`,
@@ -234,6 +317,7 @@ export default function ChatSidebar({ user, onNewMatchClick, onFriendsClick }) {
                     last_message_at: new Date().toISOString(),
                     isTemporaryMatch: true, // Flag to identify this as a temporary match
                   };
+                  console.log("Opening temp match chat:", tempMatchChat);
                   openPersistentChat(tempMatchChat, user);
                 }}
               >
