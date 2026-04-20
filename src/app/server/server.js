@@ -10,10 +10,34 @@ function generateId() {
   return Math.random().toString(36).substr(2, 9) + Date.now().toString(36);
 }
 
-const server = createServer();
+// Simple health-check endpoint so Render confirms the service is alive
+const server = createServer((req, res) => {
+  if (req.url === "/health") {
+    res.writeHead(200, { "Content-Type": "text/plain" });
+    res.end("ok");
+  }
+});
+
+// Parse allowed origins from comma-separated env var, or allow all.
+// Example: CORS_ORIGIN=https://myapp.netlify.app,https://www.myapp.com
+const rawOrigins = process.env.CORS_ORIGIN;
+const allowedOrigins = rawOrigins
+  ? rawOrigins.split(",").map((o) => o.trim().replace(/\/$/, ""))
+  : null; // null → allow all
+
 const io = new Server(server, {
   cors: {
-    origin: process.env.CORS_ORIGIN || "*",
+    origin: allowedOrigins
+      ? (origin, callback) => {
+          // Allow requests with no origin (e.g. server-to-server) or matched origins
+          if (!origin || allowedOrigins.includes(origin.replace(/\/$/, ""))) {
+            callback(null, true);
+          } else {
+            console.warn(`CORS blocked origin: ${origin}`);
+            callback(new Error(`Origin ${origin} not allowed by CORS`));
+          }
+        }
+      : "*",
     methods: ["GET", "POST"],
   },
 });
