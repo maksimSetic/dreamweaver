@@ -16,7 +16,8 @@ export const useAuth = () => {
 
   useEffect(() => {
     // Initialize socket connection for authentication
-    const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:3001";
+    const SOCKET_URL =
+      process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:3001";
     const socketInstance = io(SOCKET_URL);
 
     socketInstance.on("connect", () => {

@@ -22,7 +22,8 @@ class FriendsAPI {
 
   // Initialize socket connection to get real users
   initializeSocket() {
-    const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:3001";
+    const SOCKET_URL =
+      process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:3001";
     this.socket = io(SOCKET_URL);
 
     this.socket.on("connect", () => {
@@ -62,7 +63,7 @@ class FriendsAPI {
       if (friendshipsData) {
         const friendshipsObj = JSON.parse(friendshipsData);
         this.mockFriendships = new Map(
-          Object.entries(friendshipsObj).map(([k, v]) => [parseInt(k), v])
+          Object.entries(friendshipsObj).map(([k, v]) => [parseInt(k), v]),
         );
       }
 
@@ -71,7 +72,7 @@ class FriendsAPI {
       if (requestsData) {
         const requestsObj = JSON.parse(requestsData);
         this.mockFriendRequests = new Map(
-          Object.entries(requestsObj).map(([k, v]) => [parseInt(k), v])
+          Object.entries(requestsObj).map(([k, v]) => [parseInt(k), v]),
         );
       }
 
@@ -91,14 +92,14 @@ class FriendsAPI {
       const friendshipsObj = Object.fromEntries(this.mockFriendships);
       localStorage.setItem(
         "dreamweaver_friendships",
-        JSON.stringify(friendshipsObj)
+        JSON.stringify(friendshipsObj),
       );
 
       // Save friend requests
       const requestsObj = Object.fromEntries(this.mockFriendRequests);
       localStorage.setItem(
         "dreamweaver_friend_requests",
-        JSON.stringify(requestsObj)
+        JSON.stringify(requestsObj),
       );
 
       console.log("Saved persisted data to localStorage");
@@ -143,7 +144,7 @@ class FriendsAPI {
     });
     console.log(
       "Available server users:",
-      this.serverUsers.map((u) => ({ id: u.id, username: u.username }))
+      this.serverUsers.map((u) => ({ id: u.id, username: u.username })),
     );
 
     if (!username.trim()) {
@@ -164,7 +165,7 @@ class FriendsAPI {
         }));
       console.log(
         "Returning all users for empty search:",
-        allUsers.map((u) => u.username)
+        allUsers.map((u) => u.username),
       );
       return allUsers;
     }
@@ -221,7 +222,7 @@ class FriendsAPI {
 
     console.log(
       "Search results:",
-      filteredUsers.map((u) => u.username)
+      filteredUsers.map((u) => u.username),
     );
     return filteredUsers;
   }
@@ -261,7 +262,7 @@ class FriendsAPI {
     const userIdNum = typeof userId === "string" ? parseInt(userId) : userId;
 
     console.log(
-      `Getting friend requests for user ${userIdNum} (original: ${userId})`
+      `Getting friend requests for user ${userIdNum} (original: ${userId})`,
     );
     console.log("User ID type:", typeof userIdNum);
     console.log("Current mockFriendRequests:", this.mockFriendRequests);
@@ -270,7 +271,7 @@ class FriendsAPI {
     for (let [senderId, receiverIds] of this.mockFriendRequests.entries()) {
       console.log(
         `Checking sender ${senderId} (type: ${typeof senderId}) with receivers:`,
-        receiverIds
+        receiverIds,
       );
       if (receiverIds.includes(userIdNum)) {
         console.log(`Found request from ${senderId} to ${userIdNum}`);
@@ -289,7 +290,7 @@ class FriendsAPI {
 
     console.log(
       `Returning ${requests.length} friend requests for user ${userIdNum}:`,
-      requests
+      requests,
     );
     return requests;
   }
@@ -304,7 +305,7 @@ class FriendsAPI {
         const receiver = this.serverUsers.find((u) => u.id === receiverId);
         if (!receiver) {
           console.warn(
-            `Receiver with ID ${receiverId} not found in serverUsers`
+            `Receiver with ID ${receiverId} not found in serverUsers`,
           );
           return null;
         }
@@ -328,13 +329,13 @@ class FriendsAPI {
       typeof receiverId === "string" ? parseInt(receiverId) : receiverId;
 
     console.log(
-      `Sending friend request from ${senderIdNum} to ${receiverIdNum}`
+      `Sending friend request from ${senderIdNum} to ${receiverIdNum}`,
     );
     console.log(
       "Sender ID type:",
       typeof senderIdNum,
       "Receiver ID type:",
-      typeof receiverIdNum
+      typeof receiverIdNum,
     );
     console.log("Current mockFriendRequests:", this.mockFriendRequests);
 
