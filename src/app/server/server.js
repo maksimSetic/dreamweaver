@@ -572,81 +572,103 @@ io.on("connection", (socket) => {
 
     try {
       const currentUser = registeredUsers.get(socket.id);
-      console.log("Current user data:", JSON.stringify(currentUser, null, 2));
+      console.log("=== CREATING MATCH FROM CHAT REQUEST ===");
+      console.log("Current user (accepter):", currentUser.username);
+      console.log("Requester:", fromUsername);
 
-      // Get the requester's user data from database
-      const requesterUser = await db.getUserByUsername(fromUsername);
-      console.log(
-        "Requester user data:",
-        JSON.stringify(requesterUser, null, 2)
-      );
-
-      if (!requesterUser) {
-        socket.emit("chat-request-error", {
-          message: "Requester user not found",
-        });
-        return;
-      }
-
-      // Create persistent chat between the two users
-      const chatId = generateId(); // Generate unique chat ID
-
-      // Prepare user data with proper zodiac chart access
-      const user1Data = {
-        id: requesterUser.id,
-        username: requesterUser.username,
-        sun_sign: requesterUser.sun_sign,
-        zodiacChart: {
-          sun: requesterUser.sun_sign,
-          moon: requesterUser.moon_sign,
-          rising: requesterUser.rising_sign,
-        },
-      };
-
-      const user2Data = {
-        id: currentUser.id,
-        username: currentUser.username,
-        sun_sign: currentUser.zodiacChart?.sun,
-        zodiacChart: {
-          sun: currentUser.zodiacChart?.sun,
-          moon: currentUser.zodiacChart?.moon,
-          rising: currentUser.zodiacChart?.rising,
-        },
-      };
-
-      console.log("Prepared user data for chat creation:");
-      console.log("User1 (requester):", JSON.stringify(user1Data, null, 2));
-      console.log("User2 (current):", JSON.stringify(user2Data, null, 2));
-
-      const chat = await db.createPersistentChat(user1Data, user2Data, chatId);
-
-      // Notify the accepter
-      socket.emit("chat-request-accepted", {
-        chatId: chat.id,
-        chatName: chat.name,
-        fromUsername: fromUsername,
-      });
-
-      // Notify the requester if they're online
+      // Find the requester's socket
       const requesterSocket = [...registeredUsers.entries()].find(
         ([socketId, userData]) => userData.username === fromUsername
       );
 
-      if (requesterSocket) {
-        const [requesterSocketId] = requesterSocket;
-        io.to(requesterSocketId).emit("chat-request-accepted", {
-          chatId: chat.id,
-          chatName: chat.name,
-          fromUsername: currentUser.username,
+      if (!requesterSocket) {
+        console.log("Requester not online:", fromUsername);
+        socket.emit("chat-request-error", { 
+          message: "Requester is not online" 
         });
+        return;
       }
 
-      console.log(
-        `Chat request accepted: ${fromUsername} and ${currentUser.username}`
-      );
+      const [requesterSocketId, requesterUser] = requesterSocket;
+      console.log("Found requester user:", requesterUser.username);
+
+      // Create a match between the two users (like queue system does)
+      const matchId = generateId();
+      console.log("Generated match ID:", matchId);
+
+      // Create match object (persistent since it's from a friend request)
+      const match = {
+        id: matchId,
+        user1: {
+          id: requesterUser.id || requesterUser.username,
+          name: requesterUser.username,
+          sign: requesterUser.zodiacChart?.sun || "Unknown",
+          socketId: requesterSocketId,
+        },
+        user2: {
+          id: currentUser.id || currentUser.username,
+          name: currentUser.username,
+          sign: currentUser.zodiacChart?.sun || "Unknown", 
+          socketId: socket.id,
+        },
+        messages: [],
+        createdAt: new Date(),
+        isPersistent: true, // Friend matches are always persistent
+        registeredUsers: {
+          user1: requesterUser,
+          user2: currentUser,
+        },
+      };
+
+      // Add to active matches
+      activeMatches.set(matchId, match);
+      console.log("Added match to activeMatches:", matchId);
+
+      // Create persistent chat in database
+      try {
+        const persistentChat = await db.createPersistentChat(
+          requesterUser, 
+          currentUser, 
+          matchId
+        );
+        console.log("Persistent chat created in DB:", persistentChat.chat_id);
+      } catch (dbError) {
+        console.log("DB error creating persistent chat:", dbError.message);
+        // Continue anyway - the match will still work as temporary
+      }
+
+      // Send match-found events to both users (like queue system does)
+      const matchDataForRequester = {
+        matchId,
+        isPersistent: true,
+        partner: {
+          name: currentUser.username,
+          sign: currentUser.zodiacChart?.sun || "Unknown",
+        },
+      };
+
+      const matchDataForAccepter = {
+        matchId,
+        isPersistent: true,
+        partner: {
+          name: requesterUser.username,
+          sign: requesterUser.zodiacChart?.sun || "Unknown",
+        },
+      };
+
+      // Emit match-found to both users
+      io.to(requesterSocketId).emit("match-found", matchDataForRequester);
+      socket.emit("match-found", matchDataForAccepter);
+
+      // Clean up - notify clients to remove from chat requests
+      socket.emit("chat-request-accepted", { fromUsername: fromUsername });
+      io.to(requesterSocketId).emit("chat-request-accepted", { fromUsername: currentUser.username });
+
+      console.log(`Match created from chat request: ${requesterUser.username} + ${currentUser.username} [PERSISTENT]`);
+      
     } catch (error) {
+      console.error("Error accepting chat request:", error.message);
       socket.emit("chat-request-error", { message: error.message });
-      console.log("Error accepting chat request:", error.message);
     }
   });
 

@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import Sidebar from "./Components/Sidebar";
 import MainContent from "./Components/MainContent";
 import AuthForm from "./Components/AuthForm";
+import ChatRequestAcceptedModal from "./Components/ChatRequestAcceptedModal";
 import { calculateFullChart } from "./utils/zodiacCalculations";
 import { User, AuthData } from "./types/auth";
 import { useAuth } from "./hooks/useAuth";
@@ -226,6 +227,7 @@ export default function Home() {
           user={user}
           onLogin={() => setShowAuth(true)}
         />
+        <ChatRequestAcceptedModal />
       </div>
     );
   };

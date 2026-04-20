@@ -26,7 +26,7 @@ export default function Sidebar({
       {/* Desktop Sidebar - Hidden on mobile/tablet, shown on large screens */}
       <aside className="hidden lg:flex lg:w-64 bg-gradient-to-b from-indigo-700 via-indigo-800 to-indigo-900 text-white flex-col shadow-lg min-h-screen">
         <div className="p-6 border-b border-indigo-600">
-          <h2 className="text-2xl font-extrabold tracking-wide">Dreamweaver</h2>
+          <h2 className="text-2xl font-extrabold tracking-wide">Stargazer</h2>
           {user && (
             <div className="mt-3 text-sm">
               <div className="flex items-center space-x-2">
@@ -96,7 +96,7 @@ export default function Sidebar({
           <div className="flex items-center justify-between px-6 py-4">
             <div>
               <h1 className="text-2xl font-extrabold tracking-wide">
-                Dreamweaver
+                Stargazer
               </h1>
               {user && (
                 <div className="text-xs text-indigo-200 mt-1">

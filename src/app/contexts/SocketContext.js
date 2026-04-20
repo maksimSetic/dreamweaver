@@ -99,6 +99,10 @@ export const SocketProvider = ({ children, onMatchFound, user }) => {
   const [chatRequests, setChatRequests] = useState([]);
   const [sentChatRequests, setSentChatRequests] = useState([]);
 
+  // Chat request acceptance modal state
+  const [showChatAcceptedModal, setShowChatAcceptedModal] = useState(false);
+  const [chatAcceptedData, setChatAcceptedData] = useState(null);
+
   // Save match state to localStorage whenever it changes
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -553,6 +557,22 @@ export const SocketProvider = ({ children, onMatchFound, user }) => {
 
     socketInstance.on("chat-request-accepted", (data) => {
       console.log("Chat request accepted:", data);
+
+      // Check if this was our sent request that got accepted
+      const wasMySentRequest = sentChatRequests.some(
+        (req) => req.toUsername === data.fromUsername
+      );
+
+      if (wasMySentRequest) {
+        // Show modal for the person who sent the request
+        setChatAcceptedData({
+          acceptedBy: data.fromUsername,
+          chatId: data.chatId,
+        });
+        setShowChatAcceptedModal(true);
+        console.log("Showing chat accepted modal for:", data.fromUsername);
+      }
+
       // Remove from pending requests
       setChatRequests((prev) =>
         prev.filter((req) => req.fromUsername !== data.fromUsername)
@@ -561,22 +581,6 @@ export const SocketProvider = ({ children, onMatchFound, user }) => {
       setSentChatRequests((prev) =>
         prev.filter((req) => req.toUsername !== data.fromUsername)
       );
-
-      // Immediately open the new chat
-      setCurrentChatId(data.chatId);
-      setIsMatched(true);
-      setChatClosed(false);
-      setPartnerDisconnected(false);
-
-      // Set match data for the new chat
-      setMatchData({
-        matchId: data.chatId,
-        isPersistent: true,
-        partner: {
-          name: data.fromUsername,
-          sign: null, // Will be updated when chat loads
-        },
-      });
 
       // Reload persistent chats to show the new chat
       setTimeout(() => {
@@ -800,6 +804,17 @@ export const SocketProvider = ({ children, onMatchFound, user }) => {
       newChatId: chat.chat_id,
     });
 
+    // IMPORTANT: Save current messages to originalTempMessages if leaving a temporary match
+    if (isCurrentlyInTempMatch && originalTempMatch) {
+      // Save messages whenever leaving a temporary match, regardless of destination
+      console.log("Saving current temporary match messages before switching:", {
+        currentMessagesCount: messages.length,
+        switching: `from temp match to ${chat.chat_id}`,
+        isSwitchingToTempMatch,
+      });
+      setOriginalTempMessages(messages);
+    }
+
     setCurrentChatId(chat.chat_id);
     setIsMatched(true);
     setChatClosed(false);
@@ -925,6 +940,11 @@ export const SocketProvider = ({ children, onMatchFound, user }) => {
         setChatClosed(false);
         setPartnerDisconnected(false);
         // Restore the original temporary match messages
+        console.log("Restoring temporary match messages:", {
+          originalTempMessagesCount: originalTempMessages?.length || 0,
+          currentMessagesCount: messages.length,
+          isRestoring: true,
+        });
         setMessages(originalTempMessages);
         console.log("Successfully restored temporary match:", {
           matchData: originalTempMatch,
@@ -1165,6 +1185,14 @@ export const SocketProvider = ({ children, onMatchFound, user }) => {
     sendChatRequest,
     acceptChatRequest,
     declineChatRequest,
+    // Chat request acceptance modal
+    showChatAcceptedModal,
+    chatAcceptedData,
+    closeChatAcceptedModal: () => setShowChatAcceptedModal(false),
+    startChatFromModal: (chatId) => {
+      setShowChatAcceptedModal(false);
+      // The match-found event will handle opening the chat automatically
+    },
     // Authentication functions
     register,
     login,
