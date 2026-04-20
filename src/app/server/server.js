@@ -13,7 +13,7 @@ function generateId() {
 const server = createServer();
 const io = new Server(server, {
   cors: {
-    origin: "*",
+    origin: process.env.CORS_ORIGIN || "*",
     methods: ["GET", "POST"],
   },
 });

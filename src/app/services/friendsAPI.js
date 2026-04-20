@@ -22,7 +22,8 @@ class FriendsAPI {
 
   // Initialize socket connection to get real users
   initializeSocket() {
-    this.socket = io("http://localhost:3001");
+    const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:3001";
+    this.socket = io(SOCKET_URL);
 
     this.socket.on("connect", () => {
       this.isConnected = true;
