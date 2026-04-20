@@ -26,65 +26,20 @@ export const SocketProvider = ({ children, onMatchFound, user }) => {
   useEffect(() => {
     onMatchFoundRef.current = onMatchFound;
   }, [onMatchFound]);
-  const [chatClosed, setChatClosed] = useState(() => {
-    // Restore chat closed state from localStorage
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("dreamweaver-match-state");
-      return saved ? JSON.parse(saved).chatClosed || false : false;
-    }
-    return false;
-  });
-  const [partnerDisconnected, setPartnerDisconnected] = useState(() => {
-    // Restore partner disconnected state from localStorage
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("dreamweaver-match-state");
-      return saved ? JSON.parse(saved).partnerDisconnected || false : false;
-    }
-    return false;
-  });
-  const [isMatched, setIsMatched] = useState(() => {
-    // Restore match state from localStorage
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("dreamweaver-match-state");
-      return saved ? JSON.parse(saved).isMatched : false;
-    }
-    return false;
-  });
-  const [matchData, setMatchData] = useState(() => {
-    // Restore match data from localStorage
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("dreamweaver-match-state");
-      return saved ? JSON.parse(saved).matchData : null;
-    }
-    return null;
-  });
-
+  // All localStorage state initializes to safe server-side defaults.
+  // Hydration from localStorage happens in a useEffect below (client-only).
+  const [chatClosed, setChatClosed] = useState(false);
+  const [partnerDisconnected, setPartnerDisconnected] = useState(false);
+  const [isMatched, setIsMatched] = useState(false);
+  const [matchData, setMatchData] = useState(null);
   // Store original temporary match data separately to preserve it when switching chats
-  const [originalTempMatch, setOriginalTempMatch] = useState(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("dreamweaver-match-state");
-      return saved ? JSON.parse(saved).originalTempMatch : null;
-    }
-    return null;
-  });
-
+  const [originalTempMatch, setOriginalTempMatch] = useState(null);
   // Store original temporary match messages separately
-  const [originalTempMessages, setOriginalTempMessages] = useState(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("dreamweaver-temp-messages");
-      return saved ? JSON.parse(saved) : [];
-    }
-    return [];
-  });
-
-  const [messages, setMessages] = useState(() => {
-    // Restore messages from localStorage
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("dreamweaver-messages");
-      return saved ? JSON.parse(saved) : [];
-    }
-    return [];
-  });
+  const [originalTempMessages, setOriginalTempMessages] = useState([]);
+  const [messages, setMessages] = useState([]);
+  // Tracks whether client-side hydration from localStorage has completed.
+  // Save effects must not run before hydration to avoid overwriting persisted data.
+  const [isHydrated, setIsHydrated] = useState(false);
   const [persistentChats, setPersistentChats] = useState([]);
   const [currentChatId, setCurrentChatId] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -103,21 +58,49 @@ export const SocketProvider = ({ children, onMatchFound, user }) => {
   const [showChatAcceptedModal, setShowChatAcceptedModal] = useState(false);
   const [chatAcceptedData, setChatAcceptedData] = useState(null);
 
-  // Save match state to localStorage whenever it changes
+  // Hydrate all localStorage-backed state on mount (client-only).
+  // Must be declared BEFORE the save effects so it runs first in the initial
+  // effects cycle, setting isHydrated=true before save effects are allowed to write.
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      localStorage.setItem(
-        "dreamweaver-match-state",
-        JSON.stringify({
-          isMatched,
-          matchData,
-          partnerDisconnected,
-          chatClosed,
-          originalTempMatch,
-        }),
+    try {
+      const savedState = localStorage.getItem("dreamweaver-match-state");
+      if (savedState) {
+        const parsed = JSON.parse(savedState);
+        setChatClosed(parsed.chatClosed || false);
+        setPartnerDisconnected(parsed.partnerDisconnected || false);
+        setIsMatched(parsed.isMatched || false);
+        setMatchData(parsed.matchData || null);
+        setOriginalTempMatch(parsed.originalTempMatch || null);
+      }
+      const savedTempMessages = localStorage.getItem(
+        "dreamweaver-temp-messages",
       );
+      if (savedTempMessages)
+        setOriginalTempMessages(JSON.parse(savedTempMessages));
+      const savedMessages = localStorage.getItem("dreamweaver-messages");
+      if (savedMessages) setMessages(JSON.parse(savedMessages));
+    } catch {
+      // Ignore parse errors – start with empty state
     }
+    setIsHydrated(true);
+  }, []);
+
+  // Save match state to localStorage whenever it changes.
+  // Gated on isHydrated to prevent overwriting persisted data on the first render.
+  useEffect(() => {
+    if (!isHydrated) return;
+    localStorage.setItem(
+      "dreamweaver-match-state",
+      JSON.stringify({
+        isMatched,
+        matchData,
+        partnerDisconnected,
+        chatClosed,
+        originalTempMatch,
+      }),
+    );
   }, [
+    isHydrated,
     isMatched,
     matchData,
     partnerDisconnected,
@@ -127,20 +110,18 @@ export const SocketProvider = ({ children, onMatchFound, user }) => {
 
   // Save messages to localStorage whenever they change
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      localStorage.setItem("dreamweaver-messages", JSON.stringify(messages));
-    }
-  }, [messages]);
+    if (!isHydrated) return;
+    localStorage.setItem("dreamweaver-messages", JSON.stringify(messages));
+  }, [isHydrated, messages]);
 
   // Save temporary match messages separately
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      localStorage.setItem(
-        "dreamweaver-temp-messages",
-        JSON.stringify(originalTempMessages),
-      );
-    }
-  }, [originalTempMessages]);
+    if (!isHydrated) return;
+    localStorage.setItem(
+      "dreamweaver-temp-messages",
+      JSON.stringify(originalTempMessages),
+    );
+  }, [isHydrated, originalTempMessages]);
 
   // Note: Navigation to chat is handled directly in the "match-found" event listener below
   // No need for additional useEffect that forces navigation on state changes

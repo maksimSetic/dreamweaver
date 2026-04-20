@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import dynamic from "next/dynamic";
 import { motion, AnimatePresence } from "framer-motion";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination } from "swiper/modules";
@@ -12,7 +13,10 @@ import Friends from "../Components/Features/Friends";
 import UserProfile from "../Components/UserProfile";
 import ChatSidebar from "../Components/ChatSidebar";
 import { useSocket } from "../contexts/SocketContext";
-import EmojiPicker from "emoji-picker-react";
+
+// EmojiPicker accesses browser APIs at module-init time; disable SSR to prevent
+// ReferenceError during static generation.
+const EmojiPicker = dynamic(() => import("emoji-picker-react"), { ssr: false });
 
 // Zodiac symbols mapping (needed for chat interface)
 const zodiacSymbols = {
@@ -296,33 +300,26 @@ export default function MainContent({ active, user, onLogin, setActive }) {
   const [availableQuotes, setAvailableQuotes] = useState([]);
   const [selectedQuote, setSelectedQuote] = useState("");
 
-  // Match found modal state
+  // Match found modal state – initialized to safe server-side defaults; hydrated
+  // from localStorage in a useEffect below (localStorage is client-only).
   const [showMatchFoundModal, setShowMatchFoundModal] = useState(false);
-  const [hasShownMatchModal, setHasShownMatchModal] = useState(() => {
-    // If there's already match data in localStorage, assume modal has been shown
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("dreamweaver-match-state");
-      const savedData = saved ? JSON.parse(saved) : null;
-      console.log(
-        "Initializing hasShownMatchModal from localStorage:",
-        savedData?.isMatched || false,
-      );
-      return savedData?.isMatched || false;
-    }
-    return false;
-  });
-  const [currentMatchId, setCurrentMatchId] = useState(() => {
-    // Get current match ID from localStorage if it exists
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("dreamweaver-match-state");
-      const savedData = saved ? JSON.parse(saved) : null;
-      const matchId = savedData?.matchData?.matchId || null;
-      console.log("Initializing currentMatchId from localStorage:", matchId);
-      return matchId;
-    }
-    return null;
-  });
+  const [hasShownMatchModal, setHasShownMatchModal] = useState(false);
+  const [currentMatchId, setCurrentMatchId] = useState(null);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
+
+  // Hydrate localStorage-backed state on mount (client-only).
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("dreamweaver-match-state");
+      if (saved) {
+        const savedData = JSON.parse(saved);
+        setHasShownMatchModal(savedData?.isMatched || false);
+        setCurrentMatchId(savedData?.matchData?.matchId || null);
+      }
+    } catch {
+      // Ignore parse errors
+    }
+  }, []);
 
   // Get characters for the current user's zodiac sign
   const allCharacters = getAllCharacters(user?.zodiacChart?.sun) || [];

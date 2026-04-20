@@ -13,7 +13,7 @@
     "bcrypt": "^6.0.0",
     "emoji-picker-react": "^4.14.2",
     "framer-motion": "^12.23.24",
-    "next": "15.3.4",
+    "next": "15.3.9",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-multi-carousel": "^2.8.6",
