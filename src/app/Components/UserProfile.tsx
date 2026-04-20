@@ -19,8 +19,8 @@ const UserProfile: React.FC<UserProfileProps> = ({
         animate={{ opacity: 1, y: 0 }}
         className={
           isEmbedded
-            ? "p-6 bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 rounded-xl"
-            : "min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 p-6"
+            ? "p-4 sm:p-6 bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 rounded-xl"
+            : "min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 p-4 sm:p-6"
         }
       >
         <div className="max-w-md mx-auto bg-black/30 backdrop-blur-md rounded-xl p-6 text-center">
@@ -58,15 +58,15 @@ const UserProfile: React.FC<UserProfileProps> = ({
     >
       <div className="max-w-4xl mx-auto">
         {/* Header */}
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex flex-wrap justify-between items-center mb-8 gap-3">
           <h1
-            className={`text-3xl font-bold ${
-              isEmbedded ? "text-white mb-6" : "text-white"
+            className={`text-2xl sm:text-3xl font-bold ${
+              isEmbedded ? "text-white" : "text-white"
             }`}
           >
             Your Cosmic Profile
           </h1>
-          <div className="flex space-x-4">
+          <div className="flex gap-3">
             <button
               onClick={onEdit}
               className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors"
@@ -116,7 +116,7 @@ const UserProfile: React.FC<UserProfileProps> = ({
         </motion.div>
 
         {/* Zodiac Chart */}
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-8">
           {/* Sun Sign */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
@@ -313,7 +313,7 @@ const UserProfile: React.FC<UserProfileProps> = ({
             Birth Information
           </h4>
           <div
-            className={`grid md:grid-cols-3 gap-4 text-sm ${
+            className={`grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm ${
               isEmbedded ? "text-gray-300" : "text-gray-300"
             }`}
           >

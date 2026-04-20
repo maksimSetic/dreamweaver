@@ -79,17 +79,17 @@ const AuthForm: React.FC<AuthFormProps> = ({ onAuth, onCancel }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center p-6">
+    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center p-4">
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="w-full max-w-md bg-black/30 backdrop-blur-md rounded-xl p-8 border border-white/20"
+        className="w-full max-w-md bg-black/30 backdrop-blur-md rounded-xl p-6 sm:p-8 border border-white/20"
       >
         {/* Header */}
         <div className="text-center mb-8">
           <div className="text-4xl mb-4">✨</div>
           <h1 className="text-2xl font-bold text-white mb-2">
-            {isLogin ? "Welcome Back" : "Join Dreamweaver"}
+            {isLogin ? "Welcome Back" : "Join Stargazer"}
           </h1>
           <p className="text-gray-300">
             {isLogin

@@ -231,7 +231,7 @@ function MysticElements() {
     const server = servers[serverKey];
     const totalDefense = server.defenses.reduce(
       (sum, defense) => sum + defense.strength,
-      0
+      0,
     );
 
     // Calculate Conscious attack strength (simplified - using credits as attack strength)
@@ -304,7 +304,7 @@ function MysticElements() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto p-6">
+    <div className="max-w-6xl mx-auto p-3 md:p-6">
       <div className="text-center mb-8">
         <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-cyan-600 to-purple-600 bg-clip-text text-transparent">
           🧠 Conscious vs Subconscious 🌙
@@ -342,7 +342,7 @@ function MysticElements() {
             </motion.button>
           </div>
         ) : (
-          <div className="grid grid-cols-3 gap-6 mb-6 text-center">
+          <div className="grid grid-cols-3 gap-2 md:gap-6 mb-6 text-center text-sm md:text-base">
             <div className="bg-cyan-100 p-4 rounded-lg">
               <div className="text-2xl font-bold text-cyan-800">
                 🧠 Conscious
@@ -404,7 +404,7 @@ function MysticElements() {
                   onClick={() => {
                     if (gamePhase === "subconscious_turn") {
                       setTargetServer(
-                        targetServer === serverKey ? null : serverKey
+                        targetServer === serverKey ? null : serverKey,
                       );
                     } else if (gamePhase === "conscious_turn") {
                       attemptRun(serverKey);

@@ -271,6 +271,12 @@ export default function MainContent({ active, user, onLogin, setActive }) {
   const [messageInput, setMessageInput] = useState("");
   const [usedQuotes, setUsedQuotes] = useState({});
 
+  // Mobile chat sidebar toggle state
+  const [showChatSidebar, setShowChatSidebar] = useState(false);
+
+  // Character panel toggle state
+  const [showCharacterPanel, setShowCharacterPanel] = useState(false);
+
   // Chat preservation state
   const [showChatNotification, setShowChatNotification] = useState(false);
 
@@ -299,7 +305,7 @@ export default function MainContent({ active, user, onLogin, setActive }) {
       const savedData = saved ? JSON.parse(saved) : null;
       console.log(
         "Initializing hasShownMatchModal from localStorage:",
-        savedData?.isMatched || false
+        savedData?.isMatched || false,
       );
       return savedData?.isMatched || false;
     }
@@ -2973,7 +2979,7 @@ export default function MainContent({ active, user, onLogin, setActive }) {
 
     // Get quotes that haven't been used
     const unusedQuotes = characterInfo.quotes.filter(
-      (_, index) => !usedQuotes[character]?.includes(index)
+      (_, index) => !usedQuotes[character]?.includes(index),
     );
 
     let quotesToShow = unusedQuotes;
@@ -3098,7 +3104,9 @@ export default function MainContent({ active, user, onLogin, setActive }) {
   );
 
   return (
-    <main className="flex-1 p-6 md:p-10 overflow-auto">
+    <main
+      className={`flex-1 ${active === "chat" ? "flex flex-col overflow-hidden p-0" : "overflow-auto p-4 md:p-10"}`}
+    >
       {/* Active Chat Notification */}
       <AnimatePresence>
         {showChatNotification && (
@@ -3139,32 +3147,57 @@ export default function MainContent({ active, user, onLogin, setActive }) {
         </div>
       )}
       {active === "chat" && (
-        <div>
+        <div className="flex-1 flex flex-col min-h-0">
           {user ? (
             <>
               {/* Chat Interface with Sidebar Layout */}
-              <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 text-white flex">
-                {/* Chat Sidebar Component */}
-                <ChatSidebar
-                  user={user}
-                  onNewMatchClick={() => console.log("New match clicked")}
-                  onFriendsClick={() => console.log("Friends clicked")}
-                />
+              <div className="flex-1 min-h-0 bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 text-white flex flex-col md:flex-row relative overflow-hidden">
+                {/* Mobile backdrop overlay */}
+                {showChatSidebar && (
+                  <div
+                    className="fixed inset-0 bg-black/60 z-30 md:hidden"
+                    onClick={() => setShowChatSidebar(false)}
+                  />
+                )}
+
+                {/* Chat Sidebar - slide in on mobile, always visible on desktop */}
+                <div
+                  className={`fixed md:static top-[72px] md:top-auto bottom-0 left-0 z-40 md:z-auto transition-transform duration-300 ease-in-out flex ${
+                    showChatSidebar
+                      ? "translate-x-0"
+                      : "-translate-x-full md:translate-x-0"
+                  }`}
+                >
+                  <ChatSidebar
+                    user={user}
+                    onNewMatchClick={() => console.log("New match clicked")}
+                    onFriendsClick={() => console.log("Friends clicked")}
+                    onClose={() => setShowChatSidebar(false)}
+                  />
+                </div>
 
                 {/* Main Chat Content */}
-                <div className="flex-1">
+                <div className="flex-1 min-w-0 flex flex-col min-h-0 overflow-hidden">
+                  {/* Mobile sidebar toggle bar */}
+                  <button
+                    className="md:hidden flex items-center gap-2 bg-slate-800 text-white px-4 py-3 text-sm font-medium border-b border-slate-700 w-full text-left"
+                    onClick={() => setShowChatSidebar(true)}
+                  >
+                    <span className="text-lg">☰</span>
+                    <span>Your Chats</span>
+                  </button>
                   {isMatched &&
                   matchData &&
                   !chatClosed &&
                   !showMatchFoundModal ? (
                     // Chat Interface - Use the same interface from ZodiacCompatibility
-                    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 text-white p-4 sm:p-6 md:p-8">
-                      <div className="max-w-4xl mx-auto">
+                    <div className="flex-1 min-h-0 flex flex-col overflow-y-auto bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 text-white p-4 sm:p-6 md:p-8">
+                      <div className="max-w-4xl mx-auto w-full flex flex-col flex-1 min-h-0">
                         {/* Chat Header */}
                         <motion.div
                           initial={{ opacity: 0, y: -20 }}
                           animate={{ opacity: 1, y: 0 }}
-                          className="flex flex-col sm:flex-row items-center justify-between mb-6 gap-4 bg-white/10 p-4 rounded-xl backdrop-blur-sm"
+                          className="flex flex-col sm:flex-row items-center justify-between mb-6 gap-4 bg-white/10 p-4 rounded-xl backdrop-blur-sm flex-shrink-0"
                         >
                           <button
                             onClick={closeChat}
@@ -3213,12 +3246,12 @@ export default function MainContent({ active, user, onLogin, setActive }) {
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
                           transition={{ delay: 0.2 }}
-                          className="relative"
+                          className="relative flex-1 min-h-0 flex flex-col mb-4"
                         >
                           <div
                             ref={chatContainerRef}
                             onScroll={handleScroll}
-                            className="bg-white/5 rounded-xl p-4 mb-4 h-96 overflow-y-auto space-y-3"
+                            className="bg-white/5 rounded-xl p-4 flex-1 min-h-0 overflow-y-auto space-y-3"
                           >
                             {messages.map((message) => (
                               <motion.div
@@ -3229,8 +3262,8 @@ export default function MainContent({ active, user, onLogin, setActive }) {
                                   message.type === "sent"
                                     ? "justify-end"
                                     : message.type === "system"
-                                    ? "justify-center"
-                                    : "justify-start"
+                                      ? "justify-center"
+                                      : "justify-start"
                                 }`}
                               >
                                 <div
@@ -3238,8 +3271,8 @@ export default function MainContent({ active, user, onLogin, setActive }) {
                                     message.type === "sent"
                                       ? "bg-gradient-to-r from-pink-500 to-purple-600 text-white"
                                       : message.type === "system"
-                                      ? "bg-yellow-500/20 text-yellow-200 text-center text-sm"
-                                      : "bg-white/10 text-white"
+                                        ? "bg-yellow-500/20 text-yellow-200 text-center text-sm"
+                                        : "bg-white/10 text-white"
                                   }`}
                                 >
                                   <p className="text-sm sm:text-base">
@@ -3295,7 +3328,7 @@ export default function MainContent({ active, user, onLogin, setActive }) {
                           initial={{ opacity: 0, y: 20 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: 0.3 }}
-                          className="relative mb-4"
+                          className="relative mb-4 flex-shrink-0"
                         >
                           {/* Emoji Picker */}
                           <AnimatePresence>
@@ -3373,198 +3406,231 @@ export default function MainContent({ active, user, onLogin, setActive }) {
                           </div>
                         </motion.div>
 
-                        {/* Your Zodiac Characters Section */}
-                        <motion.div
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{
-                            delay: 0.4,
-                            duration: 0.5,
-                            ease: [0.4, 0, 0.2, 1],
-                          }}
-                          className="bg-white/5 rounded-xl p-4 mb-4 border border-purple-300/20 backdrop-blur-sm"
-                        >
-                          <div className="flex items-center mb-4">
-                            <span className="text-2xl">
-                              {zodiacSymbols[user?.zodiacChart?.sun]}
-                            </span>
-                            <h3 className="text-lg font-semibold text-purple-200">
+                        {/* Your Zodiac Characters — floating toggle button bottom-left */}
+                        <div className="relative">
+                          {/* Toggle button */}
+                          <button
+                            onClick={() =>
+                              setShowCharacterPanel(!showCharacterPanel)
+                            }
+                            className="flex items-center gap-2 bg-white/10 hover:bg-white/20 border border-purple-300/30 text-white text-sm px-3 py-2 rounded-lg transition-all duration-200"
+                          >
+                            <span>{zodiacSymbols[user?.zodiacChart?.sun]}</span>
+                            <span>
                               Your {user?.zodiacChart?.sun} Characters
-                            </h3>
-                          </div>
-
-                          {/* Character Carousel */}
-                          <div className="character-carousel-container">
-                            <style jsx>{`
-                              .character-carousel-container :global(.swiper) {
-                                padding: 10px 0;
-                                margin: 0 -8px; /* Negative margin to allow slides to touch edges */
-                              }
-
-                              .character-carousel-container
-                                :global(.swiper-slide) {
-                                /* Slides will be sized automatically by slidesPerView */
-                              }
-
-                              .character-carousel-container
-                                :global(.swiper-button-next),
-                              .character-carousel-container
-                                :global(.swiper-button-prev) {
-                                background: rgba(147, 51, 234, 0.7);
-                                backdrop-filter: blur(4px);
-                                border: 1px solid rgba(147, 51, 234, 0.3);
-                                border-radius: 50%;
-                                color: white;
-                                width: 44px;
-                                height: 44px;
-                                margin-top: -22px;
-                                box-shadow: 0 4px 6px -1px rgba(147, 51, 234, 0.25);
-                                transition: all 0.2s ease;
-                              }
-
-                              .character-carousel-container
-                                :global(.swiper-button-next:hover),
-                              .character-carousel-container
-                                :global(.swiper-button-prev:hover) {
-                                background: rgba(147, 51, 234, 0.9);
-                                transform: scale(1.1);
-                              }
-
-                              .character-carousel-container
-                                :global(.swiper-button-next::after),
-                              .character-carousel-container
-                                :global(.swiper-button-prev::after) {
-                                font-size: 16px;
-                                font-weight: bold;
-                              }
-
-                              .character-carousel-container
-                                :global(.swiper-pagination-bullet) {
-                                background: rgba(168, 85, 247, 0.3);
-                                width: 8px;
-                                height: 8px;
-                                margin: 0 4px !important;
-                                transition: all 0.3s ease;
-                              }
-
-                              .character-carousel-container
-                                :global(.swiper-pagination-bullet-active) {
-                                background: rgba(168, 85, 247, 1);
-                                transform: scale(1.2);
-                              }
-
-                              .character-carousel-container
-                                :global(.swiper-pagination) {
-                                position: static !important;
-                                margin-top: 1rem;
-                              }
-                            `}</style>
-                            <Swiper
-                              modules={[Navigation, Pagination]}
-                              spaceBetween={2} // 2px gap between slides
-                              slidesPerView={6} // Show exactly 6 slides at a time
-                              navigation={allCharacters.length > 6}
-                              pagination={
-                                allCharacters.length > 6
-                                  ? { clickable: true }
-                                  : false
-                              }
-                              loop={true} // Enable infinite cycling
-                              grabCursor={true}
-                              breakpoints={{
-                                320: {
-                                  slidesPerView: 2,
-                                  spaceBetween: 2,
-                                },
-                                640: {
-                                  slidesPerView: 4,
-                                  spaceBetween: 2,
-                                },
-                                1024: {
-                                  slidesPerView: 6,
-                                  spaceBetween: 2,
-                                },
-                              }}
+                            </span>
+                            <svg
+                              className={`w-4 h-4 transition-transform duration-200 ${showCharacterPanel ? "rotate-180" : ""}`}
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
                             >
-                              {allCharacters.map((character, index) => (
-                                <SwiperSlide key={`${character}-${index}`}>
-                                  <motion.button
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: index * 0.1 }}
-                                    whileHover={{
-                                      y: -6,
-                                      filter: "brightness(1.2)",
-                                      scale: 1.03,
-                                      transition: { duration: 0.2 },
-                                    }}
-                                    whileTap={{
-                                      scale: 0.95,
-                                      transition: { duration: 0.1 },
-                                    }}
-                                    onClick={() =>
-                                      handleCharacterClick(character)
-                                    }
-                                    className="bg-gradient-to-r from-purple-500/20 to-pink-500/20 hover:from-purple-500/30 hover:to-pink-500/30 border border-purple-300/30 hover:border-purple-400/50 rounded-xl p-4 text-white flex flex-col items-center justify-between h-[140px] w-[140px] shadow-lg shadow-purple-500/10 transition-all duration-300"
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M19 9l-7 7-7-7"
+                              />
+                            </svg>
+                          </button>
+
+                          {/* Expandable panel */}
+                          <AnimatePresence>
+                            {showCharacterPanel && (
+                              <motion.div
+                                initial={{ opacity: 0, y: 10, scale: 0.97 }}
+                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                exit={{ opacity: 0, y: 10, scale: 0.97 }}
+                                transition={{ duration: 0.2 }}
+                                className="absolute bottom-full mb-2 left-0 right-0 bg-slate-900/95 border border-purple-300/20 rounded-xl p-4 backdrop-blur-sm shadow-2xl z-20"
+                              >
+                                <div className="flex items-center justify-between mb-3">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-xl">
+                                      {zodiacSymbols[user?.zodiacChart?.sun]}
+                                    </span>
+                                    <h3 className="text-sm font-semibold text-purple-200">
+                                      Your {user?.zodiacChart?.sun} Characters
+                                    </h3>
+                                  </div>
+                                  <button
+                                    onClick={() => setShowCharacterPanel(false)}
+                                    className="text-white/50 hover:text-white text-sm p-1 rounded hover:bg-white/10 transition-colors"
                                   >
-                                    {/* Character Image */}
-                                    <div className="rounded-full overflow-hidden bg-gray-700 flex items-center justify-center flex-shrink-0 w-16 h-16">
-                                      {characterData[character]?.image ? (
-                                        <img
-                                          src={characterData[character].image}
-                                          alt={character}
-                                          className="w-full h-full object-cover"
-                                          onError={(e) => {
-                                            e.target.style.display = "none";
-                                            e.target.nextSibling.style.display =
-                                              "flex";
+                                    ✕
+                                  </button>
+                                </div>
+
+                                {/* Character Carousel */}
+                                <div className="character-carousel-container">
+                                  <style jsx>{`
+                                    .character-carousel-container
+                                      :global(.swiper) {
+                                      padding: 10px 0;
+                                      margin: 0 -8px;
+                                    }
+                                    .character-carousel-container
+                                      :global(.swiper-button-next),
+                                    .character-carousel-container
+                                      :global(.swiper-button-prev) {
+                                      background: rgba(147, 51, 234, 0.7);
+                                      backdrop-filter: blur(4px);
+                                      border: 1px solid rgba(147, 51, 234, 0.3);
+                                      border-radius: 50%;
+                                      color: white;
+                                      width: 44px;
+                                      height: 44px;
+                                      margin-top: -22px;
+                                      box-shadow: 0 4px 6px -1px
+                                        rgba(147, 51, 234, 0.25);
+                                      transition: all 0.2s ease;
+                                    }
+                                    .character-carousel-container
+                                      :global(.swiper-button-next:hover),
+                                    .character-carousel-container
+                                      :global(.swiper-button-prev:hover) {
+                                      background: rgba(147, 51, 234, 0.9);
+                                      transform: scale(1.1);
+                                    }
+                                    .character-carousel-container
+                                      :global(.swiper-button-next::after),
+                                    .character-carousel-container
+                                      :global(.swiper-button-prev::after) {
+                                      font-size: 16px;
+                                      font-weight: bold;
+                                    }
+                                    .character-carousel-container
+                                      :global(.swiper-pagination-bullet) {
+                                      background: rgba(168, 85, 247, 0.3);
+                                      width: 8px;
+                                      height: 8px;
+                                      margin: 0 4px !important;
+                                      transition: all 0.3s ease;
+                                    }
+                                    .character-carousel-container
+                                      :global(
+                                        .swiper-pagination-bullet-active
+                                      ) {
+                                      background: rgba(168, 85, 247, 1);
+                                      transform: scale(1.2);
+                                    }
+                                    .character-carousel-container
+                                      :global(.swiper-pagination) {
+                                      position: static !important;
+                                      margin-top: 1rem;
+                                    }
+                                  `}</style>
+                                  <Swiper
+                                    modules={[Navigation, Pagination]}
+                                    spaceBetween={2}
+                                    slidesPerView={6}
+                                    navigation={allCharacters.length > 6}
+                                    pagination={
+                                      allCharacters.length > 6
+                                        ? { clickable: true }
+                                        : false
+                                    }
+                                    loop={true}
+                                    grabCursor={true}
+                                    breakpoints={{
+                                      320: {
+                                        slidesPerView: 2,
+                                        spaceBetween: 2,
+                                      },
+                                      640: {
+                                        slidesPerView: 4,
+                                        spaceBetween: 2,
+                                      },
+                                      1024: {
+                                        slidesPerView: 6,
+                                        spaceBetween: 2,
+                                      },
+                                    }}
+                                  >
+                                    {allCharacters.map((character, index) => (
+                                      <SwiperSlide
+                                        key={`${character}-${index}`}
+                                      >
+                                        <motion.button
+                                          initial={{ opacity: 0, y: 20 }}
+                                          animate={{ opacity: 1, y: 0 }}
+                                          transition={{ delay: index * 0.05 }}
+                                          whileHover={{
+                                            y: -6,
+                                            filter: "brightness(1.2)",
+                                            scale: 1.03,
+                                            transition: { duration: 0.2 },
                                           }}
-                                        />
-                                      ) : null}
-                                      <div
-                                        className="w-full h-full bg-purple-600 flex items-center justify-center text-white font-bold text-lg"
-                                        style={{
-                                          display: characterData[character]
-                                            ?.image
-                                            ? "none"
-                                            : "flex",
-                                        }}
-                                      >
-                                        {character
-                                          ?.split(" ")
-                                          .map((name) => name[0])
-                                          .join("")}
-                                      </div>
-                                    </div>
+                                          whileTap={{
+                                            scale: 0.95,
+                                            transition: { duration: 0.1 },
+                                          }}
+                                          onClick={() => {
+                                            handleCharacterClick(character);
+                                            setShowCharacterPanel(false);
+                                          }}
+                                          className="bg-gradient-to-r from-purple-500/20 to-pink-500/20 hover:from-purple-500/30 hover:to-pink-500/30 border border-purple-300/30 hover:border-purple-400/50 rounded-xl p-4 text-white flex flex-col items-center justify-between h-[140px] w-[140px] shadow-lg shadow-purple-500/10 transition-all duration-300"
+                                        >
+                                          <div className="rounded-full overflow-hidden bg-gray-700 flex items-center justify-center flex-shrink-0 w-16 h-16">
+                                            {characterData[character]?.image ? (
+                                              <img
+                                                src={
+                                                  characterData[character].image
+                                                }
+                                                alt={character}
+                                                className="w-full h-full object-cover"
+                                                onError={(e) => {
+                                                  e.target.style.display =
+                                                    "none";
+                                                  e.target.nextSibling.style.display =
+                                                    "flex";
+                                                }}
+                                              />
+                                            ) : null}
+                                            <div
+                                              className="w-full h-full bg-purple-600 flex items-center justify-center text-white font-bold text-lg"
+                                              style={{
+                                                display: characterData[
+                                                  character
+                                                ]?.image
+                                                  ? "none"
+                                                  : "flex",
+                                              }}
+                                            >
+                                              {character
+                                                ?.split(" ")
+                                                .map((name) => name[0])
+                                                .join("")}
+                                            </div>
+                                          </div>
+                                          <div className="text-center flex-shrink-0 mt-2">
+                                            <span
+                                              className="font-semibold leading-tight block text-sm"
+                                              style={{
+                                                display: "-webkit-box",
+                                                WebkitLineClamp: 2,
+                                                WebkitBoxOrient: "vertical",
+                                                overflow: "hidden",
+                                                textOverflow: "ellipsis",
+                                                wordBreak: "break-word",
+                                              }}
+                                            >
+                                              {character}
+                                            </span>
+                                          </div>
+                                        </motion.button>
+                                      </SwiperSlide>
+                                    ))}
+                                  </Swiper>
+                                </div>
 
-                                    {/* Character Name */}
-                                    <div className="text-center flex-shrink-0 mt-2">
-                                      <span
-                                        className="font-semibold leading-tight block text-sm"
-                                        style={{
-                                          display: "-webkit-box",
-                                          WebkitLineClamp: 2,
-                                          WebkitBoxOrient: "vertical",
-                                          overflow: "hidden",
-                                          textOverflow: "ellipsis",
-                                          wordBreak: "break-word",
-                                        }}
-                                      >
-                                        {character}
-                                      </span>
-                                    </div>
-                                  </motion.button>
-                                </SwiperSlide>
-                              ))}
-                            </Swiper>
-                          </div>
-
-                          <p className="text-xs text-purple-300/70 mt-4 text-center">
-                            Click any character to share a random quote! Use
-                            arrows to navigate through all{" "}
-                            {allCharacters.length} characters.
-                          </p>
-                        </motion.div>
+                                <p className="text-xs text-purple-300/70 mt-3 text-center">
+                                  Click any character to share a random quote!
+                                </p>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
                       </div>
                     </div>
                   ) : (

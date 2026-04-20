@@ -19,7 +19,12 @@ const zodiacSymbols = {
   Pisces: "♓",
 };
 
-export default function ChatSidebar({ user, onNewMatchClick, onFriendsClick }) {
+export default function ChatSidebar({
+  user,
+  onNewMatchClick,
+  onFriendsClick,
+  onClose,
+}) {
   const [showFriendsModal, setShowFriendsModal] = useState(false);
   const [showFriendsList, setShowFriendsList] = useState(false);
   const [showChatRequestsModal, setShowChatRequestsModal] = useState(false);
@@ -131,10 +136,21 @@ export default function ChatSidebar({ user, onNewMatchClick, onFriendsClick }) {
   return (
     <>
       {/* Chat Sidebar */}
-      <div className="w-80 bg-gradient-to-b from-slate-800 via-slate-900 to-black text-white flex flex-col shadow-xl border-r border-slate-700">
+      <div className="w-72 md:w-80 h-full bg-gradient-to-b from-slate-800 via-slate-900 to-black text-white flex flex-col shadow-xl border-r border-slate-700 overflow-y-auto">
         {/* Header */}
         <div className="p-4 border-b border-slate-700 bg-gradient-to-r from-purple-900 to-indigo-900">
-          <h2 className="text-xl font-bold text-white mb-2">💬 Your Chats</h2>
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-xl font-bold text-white">💬 Your Chats</h2>
+            {onClose && (
+              <button
+                onClick={onClose}
+                className="md:hidden p-1 rounded hover:bg-white/10 text-white/70 hover:text-white transition-colors"
+                aria-label="Close sidebar"
+              >
+                ✕
+              </button>
+            )}
+          </div>
           <div className="flex gap-2">
             <button
               onClick={() => {
@@ -216,7 +232,8 @@ export default function ChatSidebar({ user, onNewMatchClick, onFriendsClick }) {
             {/* Debug info for temporary match */}
             {originalTempMatch ? (
               <div className="text-xs text-green-400 p-1 bg-green-900/20 rounded mb-2">
-                ✅ Temp Match Available: {originalTempMatch.partner?.name} | Closed: {chatClosed ? 'Yes' : 'No'} | Chat ID: {currentChatId}
+                ✅ Temp Match Available: {originalTempMatch.partner?.name} |
+                Closed: {chatClosed ? "Yes" : "No"} | Chat ID: {currentChatId}
               </div>
             ) : (
               <div className="text-xs text-red-400 p-1 bg-red-900/20 rounded mb-2">
@@ -241,7 +258,7 @@ export default function ChatSidebar({ user, onNewMatchClick, onFriendsClick }) {
                       originalTempMatch,
                       currentChatId,
                       targetChatId: `match-${originalTempMatch.matchId}`,
-                      chatClosed
+                      chatClosed,
                     });
                     // Create a temporary match chat object
                     const tempMatchChat = {
@@ -273,7 +290,8 @@ export default function ChatSidebar({ user, onNewMatchClick, onFriendsClick }) {
                         </span>
                       </div>
                       <div className="text-sm text-slate-300 truncate">
-                        {originalTempMatch.partner?.zodiacChart?.sun || "Unknown"}{" "}
+                        {originalTempMatch.partner?.zodiacChart?.sun ||
+                          "Unknown"}{" "}
                         • Temporary match
                       </div>
                     </div>
@@ -289,7 +307,7 @@ export default function ChatSidebar({ user, onNewMatchClick, onFriendsClick }) {
             {originalTempMatch && (
               <div className="border-t border-slate-700 my-4"></div>
             )}
-            
+
             {/* Current Temporary Match - Always show if exists to debug */}
             {false && originalTempMatch && (
               <div
@@ -303,7 +321,7 @@ export default function ChatSidebar({ user, onNewMatchClick, onFriendsClick }) {
                     originalTempMatch,
                     currentChatId,
                     targetChatId: `match-${originalTempMatch.matchId}`,
-                    chatClosed
+                    chatClosed,
                   });
                   // Create a temporary match chat object
                   const tempMatchChat = {
@@ -544,7 +562,7 @@ export default function ChatSidebar({ user, onNewMatchClick, onFriendsClick }) {
                           onClick={() => {
                             console.log(
                               "Sending chat request to:",
-                              friend.username
+                              friend.username,
                             );
                             sendChatRequest(friend.username);
                             setShowFriendsList(false);
@@ -581,13 +599,13 @@ export default function ChatSidebar({ user, onNewMatchClick, onFriendsClick }) {
                                 try {
                                   await friendsAPI.acceptFriendRequest(
                                     user.id,
-                                    request.id
+                                    request.id,
                                   );
                                   loadLocalFriendsData(); // Refresh data
                                 } catch (error) {
                                   console.error(
                                     "Error accepting friend request:",
-                                    error
+                                    error,
                                   );
                                 }
                               }}
@@ -600,13 +618,13 @@ export default function ChatSidebar({ user, onNewMatchClick, onFriendsClick }) {
                                 try {
                                   await friendsAPI.rejectFriendRequest(
                                     user.id,
-                                    request.id
+                                    request.id,
                                   );
                                   loadLocalFriendsData(); // Refresh data
                                 } catch (error) {
                                   console.error(
                                     "Error rejecting friend request:",
-                                    error
+                                    error,
                                   );
                                 }
                               }}
@@ -766,7 +784,7 @@ export default function ChatSidebar({ user, onNewMatchClick, onFriendsClick }) {
                               setShowChatRequestsModal(false);
                               // Show a brief success message or notification
                               console.log(
-                                `Opening chat with ${request.fromUsername}...`
+                                `Opening chat with ${request.fromUsername}...`,
                               );
                             }}
                             className="px-3 py-2 bg-green-600 hover:bg-green-700 text-white text-sm rounded transition-colors"

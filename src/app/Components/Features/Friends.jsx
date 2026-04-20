@@ -132,7 +132,7 @@ const Friends = ({ user, onLogin }) => {
   const clearAllData = () => {
     if (
       confirm(
-        "Are you sure you want to clear all friendship data? This will remove all friends and requests."
+        "Are you sure you want to clear all friendship data? This will remove all friends and requests.",
       )
     ) {
       friendsAPI.clearAllData();
@@ -209,7 +209,7 @@ const Friends = ({ user, onLogin }) => {
       const results = await friendsAPI.searchUsers(
         username,
         userId,
-        currentUsername
+        currentUsername,
       );
       console.log("Search results received:", results);
       setSearchResults(results);
@@ -234,8 +234,8 @@ const Friends = ({ user, onLogin }) => {
       setSentRequests((prev) => [...prev, targetUser]);
       setSearchResults((prev) =>
         prev.map((u) =>
-          u.id === targetUser.id ? { ...u, hasRequestSent: true } : u
-        )
+          u.id === targetUser.id ? { ...u, hasRequestSent: true } : u,
+        ),
       );
     } catch (error) {
       console.error("Error sending friend request:", error);
@@ -257,7 +257,7 @@ const Friends = ({ user, onLogin }) => {
         { ...requestUser, status: "offline", lastSeen: "just now" },
       ]);
       setFriendRequests((prev) =>
-        prev.filter((req) => req.id !== requestUser.id)
+        prev.filter((req) => req.id !== requestUser.id),
       );
     } catch (error) {
       console.error("Error accepting friend request:", error);
@@ -275,7 +275,7 @@ const Friends = ({ user, onLogin }) => {
 
       // Update local state
       setFriendRequests((prev) =>
-        prev.filter((req) => req.id !== requestUser.id)
+        prev.filter((req) => req.id !== requestUser.id),
       );
     } catch (error) {
       console.error("Error rejecting friend request:", error);
@@ -339,12 +339,12 @@ const Friends = ({ user, onLogin }) => {
   }
 
   return (
-    <div className="bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 rounded-xl p-6">
+    <div className="bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 rounded-xl p-4 md:p-6">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold text-white mb-6">Cosmic Friends</h1>
-          <div className="flex space-x-2">
+        <div className="flex flex-wrap justify-between items-center mb-6 gap-3">
+          <h1 className="text-3xl font-bold text-white">Cosmic Friends</h1>
+          <div className="flex flex-wrap gap-2">
             <button
               onClick={refreshFriendsData}
               className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm"
@@ -392,7 +392,7 @@ const Friends = ({ user, onLogin }) => {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex-1 py-2 px-4 rounded-md transition-all duration-200 ${
+              className={`flex-1 py-2 px-1 md:px-4 rounded-md transition-all duration-200 text-sm ${
                 activeTab === tab.id
                   ? "bg-white text-indigo-900 font-medium"
                   : "text-white/70 hover:text-white hover:bg-white/5"
@@ -431,9 +431,9 @@ const Friends = ({ user, onLogin }) => {
                         animate={{ opacity: 1, y: 0 }}
                         className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/20"
                       >
-                        <div className="flex items-center justify-between">
+                        <div className="flex items-center justify-between flex-wrap gap-2">
                           <div className="flex items-center space-x-4">
-                            <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+                            <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center flex-shrink-0">
                               <span className="text-xl font-bold text-white">
                                 {friend.username
                                   ? friend.username.charAt(0).toUpperCase()
@@ -499,9 +499,9 @@ const Friends = ({ user, onLogin }) => {
                         animate={{ opacity: 1, y: 0 }}
                         className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/20"
                       >
-                        <div className="flex items-center justify-between">
+                        <div className="flex items-center justify-between flex-wrap gap-2">
                           <div className="flex items-center space-x-4">
-                            <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+                            <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center flex-shrink-0">
                               <span className="text-xl font-bold text-white">
                                 {request.username
                                   ? request.username.charAt(0).toUpperCase()
@@ -522,7 +522,7 @@ const Friends = ({ user, onLogin }) => {
                               </p>
                             </div>
                           </div>
-                          <div className="flex space-x-2">
+                          <div className="flex gap-2">
                             <button
                               onClick={() => acceptFriendRequest(request)}
                               className="bg-green-500/20 hover:bg-green-500/30 text-green-300 px-3 py-1 rounded-md text-sm transition-colors"
@@ -561,9 +561,9 @@ const Friends = ({ user, onLogin }) => {
                         animate={{ opacity: 1, y: 0 }}
                         className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/20"
                       >
-                        <div className="flex items-center justify-between">
+                        <div className="flex items-center justify-between flex-wrap gap-2">
                           <div className="flex items-center space-x-4">
-                            <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+                            <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center flex-shrink-0">
                               <span className="text-xl font-bold text-white">
                                 {request.username
                                   ? request.username.charAt(0).toUpperCase()
@@ -581,7 +581,7 @@ const Friends = ({ user, onLogin }) => {
                               </p>
                             </div>
                           </div>
-                          <div className="flex items-center space-x-2">
+                          <div className="flex items-center gap-2">
                             <span className="text-yellow-300 text-sm">
                               Pending...
                             </span>
@@ -695,15 +695,15 @@ const Friends = ({ user, onLogin }) => {
                             result.isFriend
                               ? "bg-gray-500/20 text-gray-400 cursor-not-allowed"
                               : result.hasRequestSent
-                              ? "bg-yellow-500/20 text-yellow-300 cursor-not-allowed"
-                              : "bg-green-500/20 hover:bg-green-500/30 text-green-300"
+                                ? "bg-yellow-500/20 text-yellow-300 cursor-not-allowed"
+                                : "bg-green-500/20 hover:bg-green-500/30 text-green-300"
                           }`}
                         >
                           {result.isFriend
                             ? "Friends"
                             : result.hasRequestSent
-                            ? "Sent"
-                            : "Add"}
+                              ? "Sent"
+                              : "Add"}
                         </button>
                       </div>
                     ))

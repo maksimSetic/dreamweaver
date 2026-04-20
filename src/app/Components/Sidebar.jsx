@@ -90,7 +90,7 @@ export default function Sidebar({
       </aside>
 
       {/* Mobile/Tablet Top Navigation - Hidden on large screens */}
-      <div className="lg:hidden relative">
+      <div className="lg:hidden">
         {/* Top Header with Toggle Button */}
         <header className="bg-gradient-to-r from-indigo-700 via-indigo-800 to-indigo-900 text-white shadow-lg z-50 relative">
           <div className="flex items-center justify-between px-6 py-4">
@@ -126,68 +126,78 @@ export default function Sidebar({
               </svg>
             </button>
           </div>
+
+          {/* Dropdown Navigation — absolutely positioned so it overlays content */}
+          <div
+            className={`absolute left-0 right-0 top-full z-50 transition-all duration-300 ease-in-out overflow-hidden ${
+              sidebarOpen ? "max-h-screen opacity-100" : "max-h-0 opacity-0"
+            }`}
+          >
+            <nav className="bg-gradient-to-b from-indigo-800 to-indigo-900 text-white shadow-2xl">
+              <div className="px-6 py-4 space-y-2">
+                {SIDEBAR_ITEMS.map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={() => {
+                      if (item.id === "storyteller") {
+                        handleProfileOrStorytellerClick();
+                      } else {
+                        setActive(item.id);
+                      }
+                      setSidebarOpen(false);
+                    }}
+                    className={`w-full text-left px-4 py-3 rounded-lg transition-colors duration-300 block
+                      ${
+                        active === item.id
+                          ? "bg-indigo-500 shadow-lg font-semibold"
+                          : "hover:bg-indigo-600 hover:shadow-md"
+                      }`}
+                  >
+                    {item.id === "storyteller" && user ? "Profile" : item.label}
+                  </button>
+                ))}
+
+                {/* Authentication Button in Mobile Menu */}
+                <div className="pt-2 border-t border-indigo-600">
+                  {user ? (
+                    <button
+                      onClick={() => {
+                        onLogout?.();
+                        setSidebarOpen(false);
+                      }}
+                      className="w-full bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-lg transition-colors duration-300"
+                    >
+                      Sign Out
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        onLogin?.();
+                        setSidebarOpen(false);
+                      }}
+                      className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white py-2 px-4 rounded-lg transition-all duration-300"
+                    >
+                      Sign In
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Footer in dropdown */}
+              <div className="px-6 py-4 border-t border-indigo-600 text-sm opacity-70">
+                &copy; 2025 Your Company
+              </div>
+            </nav>
+          </div>
         </header>
 
-        {/* Dropdown Navigation */}
-        <nav
-          className={`bg-gradient-to-b from-indigo-800 to-indigo-900 text-white shadow-lg transform transition-all duration-300 ease-in-out overflow-hidden z-40 ${
-            sidebarOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
-          }`}
-        >
-          <div className="px-6 py-4 space-y-2">
-            {SIDEBAR_ITEMS.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => {
-                  if (item.id === "storyteller") {
-                    handleProfileOrStorytellerClick();
-                  } else {
-                    setActive(item.id);
-                  }
-                  setSidebarOpen(false); // Close sidebar after selection
-                }}
-                className={`w-full text-left px-4 py-3 rounded-lg transition-colors duration-300 block
-                  ${
-                    active === item.id
-                      ? "bg-indigo-500 shadow-lg font-semibold"
-                      : "hover:bg-indigo-600 hover:shadow-md"
-                  }`}
-              >
-                {item.id === "storyteller" && user ? "Profile" : item.label}
-              </button>
-            ))}
-
-            {/* Authentication Button in Mobile Menu */}
-            <div className="pt-2 border-t border-indigo-600">
-              {user ? (
-                <button
-                  onClick={() => {
-                    onLogout?.();
-                    setSidebarOpen(false);
-                  }}
-                  className="w-full bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-lg transition-colors duration-300"
-                >
-                  Sign Out
-                </button>
-              ) : (
-                <button
-                  onClick={() => {
-                    onLogin?.();
-                    setSidebarOpen(false);
-                  }}
-                  className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white py-2 px-4 rounded-lg transition-all duration-300"
-                >
-                  Sign In
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* Footer in dropdown */}
-          <div className="px-6 py-4 border-t border-indigo-600 text-sm opacity-70">
-            &copy; 2025 Your Company
-          </div>
-        </nav>
+        {/* Backdrop — closes menu when tapping outside */}
+        {sidebarOpen && (
+          <div
+            className="fixed inset-0 z-40"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
       </div>
     </>
   );

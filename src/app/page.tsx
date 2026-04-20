@@ -120,7 +120,7 @@ export default function Home() {
       const zodiacChart = calculateFullChart(
         authData.birthDate,
         authData.birthTime,
-        authData.birthLocation
+        authData.birthLocation,
       );
 
       const userData = {
@@ -172,13 +172,13 @@ export default function Home() {
     useEffect(() => {
       console.log(
         "AppContent useEffect triggered. User:",
-        user && (user as any).username
+        user && (user as User).username,
       );
       console.log(
         "Socket connected:",
         isConnected,
         "Socket authenticated:",
-        isAuthenticated
+        isAuthenticated,
       );
 
       if (user && authenticateSocket && isConnected && !isAuthenticated) {
@@ -188,7 +188,7 @@ export default function Home() {
 
         console.log(
           "Temp credentials available:",
-          !!tempUsername && !!tempPassword
+          !!tempUsername && !!tempPassword,
         );
 
         if (tempUsername && tempPassword) {
@@ -199,7 +199,7 @@ export default function Home() {
           });
         } else {
           console.log(
-            "No temp credentials available for SocketContext authentication"
+            "No temp credentials available for SocketContext authentication",
           );
         }
       }
@@ -211,7 +211,7 @@ export default function Home() {
     };
 
     return (
-      <div className="flex flex-col lg:flex-row h-screen bg-gray-50">
+      <div className="flex flex-col lg:flex-row min-h-screen h-screen bg-gray-50 overflow-hidden">
         <Sidebar
           active={active}
           setActive={setActive}

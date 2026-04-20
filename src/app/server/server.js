@@ -44,7 +44,7 @@ io.on("connection", (socket) => {
     try {
       const user = await db.loginUser(
         credentials.username,
-        credentials.password
+        credentials.password,
       );
 
       // Store registered user info
@@ -124,7 +124,7 @@ io.on("connection", (socket) => {
     // Check if user is already in an active match and clean it up
     if (socket.userId) {
       console.log(
-        `User ${socket.userId} is joining new queue, cleaning up existing match`
+        `User ${socket.userId} is joining new queue, cleaning up existing match`,
       );
 
       // Remove from any active matches
@@ -167,11 +167,11 @@ io.on("connection", (socket) => {
     socket.userId = userId;
 
     console.log(
-      `User ${user.name} (${user.sign}) joined queue. Queue length: ${userQueue.length}`
+      `User ${user.name} (${user.sign}) joined queue. Queue length: ${userQueue.length}`,
     );
     console.log(
       "Current queue:",
-      userQueue.map((u) => ({ name: u.name, id: u.id, socketId: u.socketId }))
+      userQueue.map((u) => ({ name: u.name, id: u.id, socketId: u.socketId })),
     );
     console.log("User sockets map size:", userSockets.size);
 
@@ -189,7 +189,7 @@ io.on("connection", (socket) => {
 
       if (initialLength > newLength) {
         console.log(
-          `User ${socket.userId} cancelled queue. Queue length: ${newLength}`
+          `User ${socket.userId} cancelled queue. Queue length: ${newLength}`,
         );
       }
     }
@@ -245,12 +245,12 @@ io.on("connection", (socket) => {
             actualMatchId,
             senderData.id,
             senderData.username,
-            message
+            message,
           )
             .then((savedMessage) => {
               console.log(
                 "Message saved to database:",
-                savedMessage.message_id
+                savedMessage.message_id,
               );
             })
             .catch((error) => {
@@ -286,7 +286,7 @@ io.on("connection", (socket) => {
 
   // Handle match rejoining
   socket.on("rejoin-match", (data) => {
-    const { matchId, userInfo } = data;
+    const { matchId } = data;
     console.log(`User ${socket.id} attempting to rejoin match ${matchId}`);
 
     const match = activeMatches.get(matchId);
@@ -369,7 +369,7 @@ io.on("connection", (socket) => {
 
       // Notify the target user if they're online
       const targetUserSocket = [...registeredUsers.entries()].find(
-        ([socketId, userData]) => userData.username === toUsername
+        ([, userData]) => userData.username === toUsername,
       );
 
       if (targetUserSocket) {
@@ -381,7 +381,7 @@ io.on("connection", (socket) => {
       }
 
       console.log(
-        `Friend invitation sent from ${result.fromUsername} to ${result.toUsername}`
+        `Friend invitation sent from ${result.fromUsername} to ${result.toUsername}`,
       );
     } catch (error) {
       socket.emit("friend-invitation-error", { message: error.message });
@@ -395,7 +395,7 @@ io.on("connection", (socket) => {
       "get-friends-data received, isRegistered:",
       socket.isRegistered,
       "userId:",
-      socket.userId
+      socket.userId,
     );
 
     if (!socket.isRegistered) {
@@ -427,7 +427,7 @@ io.on("connection", (socket) => {
     try {
       const result = await db.acceptFriendInvitation(
         socket.userId,
-        fromUsername
+        fromUsername,
       );
       socket.emit("friend-invitation-accepted", {
         friend: result.friend,
@@ -435,7 +435,7 @@ io.on("connection", (socket) => {
 
       // Notify the sender if they're online
       const senderSocket = [...registeredUsers.entries()].find(
-        ([socketId, userData]) => userData.username === fromUsername
+        ([, userData]) => userData.username === fromUsername,
       );
 
       if (senderSocket) {
@@ -453,7 +453,7 @@ io.on("connection", (socket) => {
       console.log(
         `Friend invitation accepted: ${fromUsername} and ${
           registeredUsers.get(socket.id).username
-        }`
+        }`,
       );
     } catch (error) {
       socket.emit("accept-friend-error", { message: error.message });
@@ -477,7 +477,7 @@ io.on("connection", (socket) => {
       console.log(
         `Friend invitation declined: ${fromUsername} to ${
           registeredUsers.get(socket.id).username
-        }`
+        }`,
       );
     } catch (error) {
       socket.emit("decline-friend-error", { message: error.message });
@@ -489,7 +489,7 @@ io.on("connection", (socket) => {
   socket.on("send-chat-request", async (data) => {
     const { toUsername } = data;
     console.log(
-      `Chat request received: ${socket.id} wants to chat with ${toUsername}`
+      `Chat request received: ${socket.id} wants to chat with ${toUsername}`,
     );
 
     // Debug: Show all registered users
@@ -536,13 +536,13 @@ io.on("connection", (socket) => {
 
       // Notify the target user if they're online
       const friendSocket = [...registeredUsers.entries()].find(
-        ([socketId, userData]) => userData.username === toUsername
+        ([, userData]) => userData.username === toUsername,
       );
 
       if (friendSocket) {
         const [friendSocketId] = friendSocket;
         console.log(
-          `Friend ${toUsername} is online, sending chat-request-received to socket ${friendSocketId}`
+          `Friend ${toUsername} is online, sending chat-request-received to socket ${friendSocketId}`,
         );
         io.to(friendSocketId).emit("chat-request-received", {
           fromUsername: currentUser.username,
@@ -553,7 +553,7 @@ io.on("connection", (socket) => {
       }
 
       console.log(
-        `Chat request sent from ${currentUser.username} to ${toUsername}`
+        `Chat request sent from ${currentUser.username} to ${toUsername}`,
       );
     } catch (error) {
       socket.emit("chat-request-error", { message: error.message });
@@ -578,13 +578,13 @@ io.on("connection", (socket) => {
 
       // Find the requester's socket
       const requesterSocket = [...registeredUsers.entries()].find(
-        ([socketId, userData]) => userData.username === fromUsername
+        ([, userData]) => userData.username === fromUsername,
       );
 
       if (!requesterSocket) {
         console.log("Requester not online:", fromUsername);
-        socket.emit("chat-request-error", { 
-          message: "Requester is not online" 
+        socket.emit("chat-request-error", {
+          message: "Requester is not online",
         });
         return;
       }
@@ -608,7 +608,7 @@ io.on("connection", (socket) => {
         user2: {
           id: currentUser.id || currentUser.username,
           name: currentUser.username,
-          sign: currentUser.zodiacChart?.sun || "Unknown", 
+          sign: currentUser.zodiacChart?.sun || "Unknown",
           socketId: socket.id,
         },
         messages: [],
@@ -627,9 +627,9 @@ io.on("connection", (socket) => {
       // Create persistent chat in database
       try {
         const persistentChat = await db.createPersistentChat(
-          requesterUser, 
-          currentUser, 
-          matchId
+          requesterUser,
+          currentUser,
+          matchId,
         );
         console.log("Persistent chat created in DB:", persistentChat.chat_id);
       } catch (dbError) {
@@ -662,10 +662,13 @@ io.on("connection", (socket) => {
 
       // Clean up - notify clients to remove from chat requests
       socket.emit("chat-request-accepted", { fromUsername: fromUsername });
-      io.to(requesterSocketId).emit("chat-request-accepted", { fromUsername: currentUser.username });
+      io.to(requesterSocketId).emit("chat-request-accepted", {
+        fromUsername: currentUser.username,
+      });
 
-      console.log(`Match created from chat request: ${requesterUser.username} + ${currentUser.username} [PERSISTENT]`);
-      
+      console.log(
+        `Match created from chat request: ${requesterUser.username} + ${currentUser.username} [PERSISTENT]`,
+      );
     } catch (error) {
       console.error("Error accepting chat request:", error.message);
       socket.emit("chat-request-error", { message: error.message });
@@ -689,7 +692,7 @@ io.on("connection", (socket) => {
 
       // Notify the requester if they're online
       const requesterSocket = [...registeredUsers.entries()].find(
-        ([socketId, userData]) => userData.username === fromUsername
+        ([, userData]) => userData.username === fromUsername,
       );
 
       if (requesterSocket) {
@@ -700,7 +703,7 @@ io.on("connection", (socket) => {
       }
 
       console.log(
-        `Chat request declined: ${fromUsername} to ${currentUser.username}`
+        `Chat request declined: ${fromUsername} to ${currentUser.username}`,
       );
     } catch (error) {
       socket.emit("chat-request-error", { message: error.message });
@@ -753,7 +756,7 @@ io.on("connection", (socket) => {
             rising: friendUser.rising_sign,
           },
         },
-        chatId
+        chatId,
       );
 
       socket.emit("friend-chat-started", {
@@ -764,7 +767,7 @@ io.on("connection", (socket) => {
 
       // Notify friend if they're online
       const friendSocket = [...registeredUsers.entries()].find(
-        ([socketId, userData]) => userData.username === friendUsername
+        ([, userData]) => userData.username === friendUsername,
       );
 
       if (friendSocket) {
@@ -777,7 +780,7 @@ io.on("connection", (socket) => {
       }
 
       console.log(
-        `Friend chat started between ${currentUser.username} and ${friendUsername}`
+        `Friend chat started between ${currentUser.username} and ${friendUsername}`,
       );
     } catch (error) {
       socket.emit("start-friend-chat-error", { message: error.message });
@@ -814,7 +817,7 @@ io.on("connection", (socket) => {
         });
 
         console.log(
-          `User ${disconnectedUser.name} disconnected from match ${matchId}`
+          `User ${disconnectedUser.name} disconnected from match ${matchId}`,
         );
 
         // Notify the other user
@@ -826,25 +829,28 @@ io.on("connection", (socket) => {
         // For persistent chats, don't remove the match - just mark as disconnected
         // For temporary chats, use the existing timeout logic
         if (!match.isPersistent) {
-          setTimeout(() => {
-            // Check if user has reconnected
-            if (disconnectedUsers.has(disconnectedUser.id)) {
-              console.log(
-                `Removing stale temporary match ${matchId} after timeout`
-              );
-              activeMatches.delete(matchId);
-              disconnectedUsers.delete(disconnectedUser.id);
+          setTimeout(
+            () => {
+              // Check if user has reconnected
+              if (disconnectedUsers.has(disconnectedUser.id)) {
+                console.log(
+                  `Removing stale temporary match ${matchId} after timeout`,
+                );
+                activeMatches.delete(matchId);
+                disconnectedUsers.delete(disconnectedUser.id);
 
-              // Notify the other user if still connected
-              const stillConnectedSocketId = userSockets.get(otherUser.id);
-              if (stillConnectedSocketId) {
-                io.to(stillConnectedSocketId).emit("match-expired", {
-                  message:
-                    "Your chat partner did not reconnect in time. You can start a new match.",
-                });
+                // Notify the other user if still connected
+                const stillConnectedSocketId = userSockets.get(otherUser.id);
+                if (stillConnectedSocketId) {
+                  io.to(stillConnectedSocketId).emit("match-expired", {
+                    message:
+                      "Your chat partner did not reconnect in time. You can start a new match.",
+                  });
+                }
               }
-            }
-          }, 5 * 60 * 1000); // 5 minutes timeout for temporary chats
+            },
+            5 * 60 * 1000,
+          ); // 5 minutes timeout for temporary chats
         }
 
         break;
@@ -861,13 +867,13 @@ io.on("connection", (socket) => {
 function findMatch(newUser) {
   // Look for a suitable match in the queue
   const potentialMatches = userQueue.filter(
-    (user) => user.id !== newUser.id && user.socketId !== newUser.socketId
+    (user) => user.id !== newUser.id && user.socketId !== newUser.socketId,
   );
 
   console.log(`Finding match for ${newUser.name}:`);
   console.log(
     "Potential matches:",
-    potentialMatches.map((u) => ({ name: u.name, id: u.id }))
+    potentialMatches.map((u) => ({ name: u.name, id: u.id })),
   );
 
   if (potentialMatches.length > 0) {
@@ -878,7 +884,7 @@ function findMatch(newUser) {
 
     // Remove both users from queue
     userQueue = userQueue.filter(
-      (user) => user.id !== newUser.id && user.id !== matchedUser.id
+      (user) => user.id !== newUser.id && user.id !== matchedUser.id,
     );
 
     // Create a match
@@ -953,7 +959,7 @@ function findMatch(newUser) {
           matchedUser.name
         } (${matchedUser.sign}) ${
           isPersistent ? "[PERSISTENT]" : "[TEMPORARY]"
-        }`
+        }`,
       );
     }
   } else {

@@ -114,7 +114,7 @@ export const SocketProvider = ({ children, onMatchFound, user }) => {
           partnerDisconnected,
           chatClosed,
           originalTempMatch,
-        })
+        }),
       );
     }
   }, [
@@ -137,7 +137,7 @@ export const SocketProvider = ({ children, onMatchFound, user }) => {
     if (typeof window !== "undefined") {
       localStorage.setItem(
         "dreamweaver-temp-messages",
-        JSON.stringify(originalTempMessages)
+        JSON.stringify(originalTempMessages),
       );
     }
   }, [originalTempMessages]);
@@ -177,10 +177,10 @@ export const SocketProvider = ({ children, onMatchFound, user }) => {
         } else {
           console.log("No password or stored credentials available");
           console.log(
-            "Note: SocketContext socket cannot authenticate automatically"
+            "Note: SocketContext socket cannot authenticate automatically",
           );
           console.log(
-            "Chat requests and friends features may not work until manual authentication"
+            "Chat requests and friends features may not work until manual authentication",
           );
         }
       }
@@ -189,7 +189,7 @@ export const SocketProvider = ({ children, onMatchFound, user }) => {
       if (isMatched && matchData && !partnerDisconnected) {
         console.log(
           "Reconnected - attempting to rejoin match:",
-          matchData.matchId
+          matchData.matchId,
         );
         socketInstance.emit("rejoin-match", {
           matchId: matchData.matchId,
@@ -254,7 +254,7 @@ export const SocketProvider = ({ children, onMatchFound, user }) => {
         // For now, let the user decide by keeping the temp match available
         // They can manually start a new match if they want to clear it
         console.log(
-          "New persistent match found, but keeping existing temporary match available"
+          "New persistent match found, but keeping existing temporary match available",
         );
       }
 
@@ -439,8 +439,8 @@ export const SocketProvider = ({ children, onMatchFound, user }) => {
             msg.message_type === "system"
               ? "system"
               : msg.sender_username === matchData?.partner?.name
-              ? "received"
-              : "sent",
+                ? "received"
+                : "sent",
           text: msg.message_text,
           sender: msg.sender_username,
           timestamp: new Date(msg.created_at).toLocaleTimeString(),
@@ -457,7 +457,7 @@ export const SocketProvider = ({ children, onMatchFound, user }) => {
       console.log("Chat deleted:", result);
       // Remove from persistent chats list
       setPersistentChats((prev) =>
-        prev.filter((chat) => chat.chat_id !== result.chatId)
+        prev.filter((chat) => chat.chat_id !== result.chatId),
       );
       // If this was the current chat, close it
       if (currentChatId === result.chatId) {
@@ -501,20 +501,20 @@ export const SocketProvider = ({ children, onMatchFound, user }) => {
       console.log("Friend invitation accepted:", data);
       setFriends((prev) => [...prev, data.friend]);
       setPendingInvitations((prev) =>
-        prev.filter((inv) => inv.fromUsername !== data.friend.username)
+        prev.filter((inv) => inv.fromUsername !== data.friend.username),
       );
       setSentInvitations((prev) =>
-        prev.filter((inv) => inv.toUsername !== data.friend.username)
+        prev.filter((inv) => inv.toUsername !== data.friend.username),
       );
     });
 
     socketInstance.on("friend-invitation-declined", (data) => {
       console.log("Friend invitation declined:", data);
       setPendingInvitations((prev) =>
-        prev.filter((inv) => inv.fromUsername !== data.fromUsername)
+        prev.filter((inv) => inv.fromUsername !== data.fromUsername),
       );
       setSentInvitations((prev) =>
-        prev.filter((inv) => inv.toUsername !== data.fromUsername)
+        prev.filter((inv) => inv.toUsername !== data.fromUsername),
       );
     });
 
@@ -560,7 +560,7 @@ export const SocketProvider = ({ children, onMatchFound, user }) => {
 
       // Check if this was our sent request that got accepted
       const wasMySentRequest = sentChatRequests.some(
-        (req) => req.toUsername === data.fromUsername
+        (req) => req.toUsername === data.fromUsername,
       );
 
       if (wasMySentRequest) {
@@ -575,11 +575,11 @@ export const SocketProvider = ({ children, onMatchFound, user }) => {
 
       // Remove from pending requests
       setChatRequests((prev) =>
-        prev.filter((req) => req.fromUsername !== data.fromUsername)
+        prev.filter((req) => req.fromUsername !== data.fromUsername),
       );
       // Remove from sent requests if this was our request
       setSentChatRequests((prev) =>
-        prev.filter((req) => req.toUsername !== data.fromUsername)
+        prev.filter((req) => req.toUsername !== data.fromUsername),
       );
 
       // Reload persistent chats to show the new chat
@@ -592,12 +592,12 @@ export const SocketProvider = ({ children, onMatchFound, user }) => {
     socketInstance.on("chat-request-declined", (data) => {
       console.log("Chat request declined:", data);
       setChatRequests((prev) =>
-        prev.filter((req) => req.fromUsername !== data.fromUsername)
+        prev.filter((req) => req.fromUsername !== data.fromUsername),
       );
       // If we received data.toUsername, it means our sent request was declined
       if (data.toUsername) {
         setSentChatRequests((prev) =>
-          prev.filter((req) => req.toUsername !== data.toUsername)
+          prev.filter((req) => req.toUsername !== data.toUsername),
         );
       }
     });
@@ -925,7 +925,7 @@ export const SocketProvider = ({ children, onMatchFound, user }) => {
     } else if (chat.isTemporaryMatch) {
       // For temporary match, restore the original temporary match data and messages
       console.log(
-        "Opening temporary match chat, restoring original match data and messages"
+        "Opening temporary match chat, restoring original match data and messages",
       );
       console.log("Current states before restoration:", {
         originalTempMatch,
@@ -952,7 +952,7 @@ export const SocketProvider = ({ children, onMatchFound, user }) => {
         });
       } else {
         console.warn(
-          "Attempted to open temporary match but originalTempMatch is null"
+          "Attempted to open temporary match but originalTempMatch is null",
         );
       }
     } else {
@@ -996,7 +996,7 @@ export const SocketProvider = ({ children, onMatchFound, user }) => {
       "loadFriends called, socket:",
       !!socket,
       "isConnected:",
-      isConnected
+      isConnected,
     );
     if (socket) {
       console.log("Emitting get-friends-data");
@@ -1032,7 +1032,7 @@ export const SocketProvider = ({ children, onMatchFound, user }) => {
 
     if (!isAuthenticated) {
       console.error(
-        "SocketContext: Not authenticated - cannot send chat request"
+        "SocketContext: Not authenticated - cannot send chat request",
       );
       // Try to re-authenticate
       const tempUsername = sessionStorage.getItem("temp_username");
@@ -1055,14 +1055,14 @@ export const SocketProvider = ({ children, onMatchFound, user }) => {
   const acceptChatRequest = (fromUsername) => {
     if (!socket) {
       console.error(
-        "SocketContext: No socket available for accepting chat request"
+        "SocketContext: No socket available for accepting chat request",
       );
       return;
     }
 
     if (!isAuthenticated) {
       console.error(
-        "SocketContext: Not authenticated - cannot accept chat request"
+        "SocketContext: Not authenticated - cannot accept chat request",
       );
       return;
     }
@@ -1074,14 +1074,14 @@ export const SocketProvider = ({ children, onMatchFound, user }) => {
   const declineChatRequest = (fromUsername) => {
     if (!socket) {
       console.error(
-        "SocketContext: No socket available for declining chat request"
+        "SocketContext: No socket available for declining chat request",
       );
       return;
     }
 
     if (!isAuthenticated) {
       console.error(
-        "SocketContext: Not authenticated - cannot decline chat request"
+        "SocketContext: Not authenticated - cannot decline chat request",
       );
       return;
     }
@@ -1125,7 +1125,7 @@ export const SocketProvider = ({ children, onMatchFound, user }) => {
 
     if (!socket.connected) {
       console.log(
-        "SocketContext: Socket not connected, retrying in 1 second..."
+        "SocketContext: Socket not connected, retrying in 1 second...",
       );
       setTimeout(() => {
         authenticateSocket(credentials);
@@ -1135,7 +1135,7 @@ export const SocketProvider = ({ children, onMatchFound, user }) => {
 
     console.log(
       "SocketContext: Manually authenticating socket with username:",
-      credentials.username
+      credentials.username,
     );
     socket.emit("login", credentials);
   };
@@ -1189,7 +1189,7 @@ export const SocketProvider = ({ children, onMatchFound, user }) => {
     showChatAcceptedModal,
     chatAcceptedData,
     closeChatAcceptedModal: () => setShowChatAcceptedModal(false),
-    startChatFromModal: (chatId) => {
+    startChatFromModal: () => {
       setShowChatAcceptedModal(false);
       // The match-found event will handle opening the chat automatically
     },
