@@ -36,89 +36,209 @@ const zodiacSymbols = {
 // Notable traits for each zodiac sign - Full character pool (15 characters each)
 const zodiacTraits = {
   Aries: [
-    "Annie Leonhart", "Eren Yeager", "Hidan", 
-    "Katsuki Bakugo", "Natsu Dragneel", "Edward Elric",
-    "Lady Gaga", "Robert Downey Jr.", "Emma Watson",
-    "Elton John", "Mariah Carey", "Jackie Chan",
-    "Vincent van Gogh", "Leonardo da Vinci", "Maya Angelou"
+    "Annie Leonhart",
+    "Eren Yeager",
+    "Hidan",
+    "Katsuki Bakugo",
+    "Natsu Dragneel",
+    "Edward Elric",
+    "Lady Gaga",
+    "Robert Downey Jr.",
+    "Emma Watson",
+    "Elton John",
+    "Mariah Carey",
+    "Jackie Chan",
+    "Vincent van Gogh",
+    "Leonardo da Vinci",
+    "Maya Angelou",
   ],
   Taurus: [
-    "Choji Akimichi", "Deidara", "Kankuro",
-    "Tanjiro Kamado", "Momo Yaoyorozu", "Bulma",
-    "Dwayne Johnson", "Adele", "George Clooney", 
-    "Queen Elizabeth II", "Mark Zuckerberg", "Audrey Hepburn",
-    "William Shakespeare", "Salvador Dalí", "Barbra Streisand"
+    "Choji Akimichi",
+    "Deidara",
+    "Kankuro",
+    "Tanjiro Kamado",
+    "Momo Yaoyorozu",
+    "Bulma",
+    "Dwayne Johnson",
+    "Adele",
+    "George Clooney",
+    "Queen Elizabeth II",
+    "Mark Zuckerberg",
+    "Audrey Hepburn",
+    "William Shakespeare",
+    "Salvador Dalí",
+    "Barbra Streisand",
   ],
   Gemini: [
-    "Itachi Uchiha", "Ymir", "Karin Uzumaki",
-    "Zenitsu Agatsuma", "Denki Kaminari", "Kuroko Tetsuya",
-    "Johnny Depp", "Angelina Jolie", "Kanye West",
-    "Donald Trump", "Marilyn Monroe", "Bob Dylan",
-    "John F. Kennedy", "Walt Whitman", "Paul McCartney"
+    "Itachi Uchiha",
+    "Ymir",
+    "Karin Uzumaki",
+    "Zenitsu Agatsuma",
+    "Denki Kaminari",
+    "Kuroko Tetsuya",
+    "Johnny Depp",
+    "Angelina Jolie",
+    "Kanye West",
+    "Donald Trump",
+    "Marilyn Monroe",
+    "Bob Dylan",
+    "John F. Kennedy",
+    "Walt Whitman",
+    "Paul McCartney",
   ],
   Cancer: [
-    "Neji Hyuga", "Kushina Uzumaki", "Madara Uchiha",
-    "Nezuko Kamado", "Izuku Midoriya", "Hinata Hyuga",
-    "Tom Hanks", "Selena Gomez", "Robin Williams",
-    "Princess Diana", "Ernest Hemingway", "Frida Kahlo",
-    "Nelson Mandela", "Julius Caesar", "Meryl Streep"
+    "Neji Hyuga",
+    "Kushina Uzumaki",
+    "Madara Uchiha",
+    "Nezuko Kamado",
+    "Izuku Midoriya",
+    "Hinata Hyuga",
+    "Tom Hanks",
+    "Selena Gomez",
+    "Robin Williams",
+    "Princess Diana",
+    "Ernest Hemingway",
+    "Frida Kahlo",
+    "Nelson Mandela",
+    "Julius Caesar",
+    "Meryl Streep",
   ],
   Leo: [
-    "Sasuke Uchiha", "Historia Reiss", "Fugaku Uchiha",
-    "Kyojuro Rengoku", "All Might", "Vegeta",
-    "Jennifer Lopez", "Barack Obama", "Madonna",
-    "Arnold Schwarzenegger", "Whitney Houston", "Andy Warhol",
-    "Napoleon Bonaparte", "Alfred Hitchcock", "Mick Jagger"
+    "Sasuke Uchiha",
+    "Historia Reiss",
+    "Fugaku Uchiha",
+    "Kyojuro Rengoku",
+    "All Might",
+    "Vegeta",
+    "Jennifer Lopez",
+    "Barack Obama",
+    "Madonna",
+    "Arnold Schwarzenegger",
+    "Whitney Houston",
+    "Andy Warhol",
+    "Napoleon Bonaparte",
+    "Alfred Hitchcock",
+    "Mick Jagger",
   ],
   Virgo: [
-    "Hange Zoë", "Kakashi Hatake", "Shikamaru Nara",
-    "Giyu Tomioka", "Tenya Iida", "Senku Ishigami",
-    "Beyoncé", "Michael Jackson", "Keanu Reeves",
-    "Mother Teresa", "Warren Buffett", "Stephen King",
-    "Agatha Christie", "Freddie Mercury", "Amy Poehler"
+    "Hange Zoë",
+    "Kakashi Hatake",
+    "Shikamaru Nara",
+    "Giyu Tomioka",
+    "Tenya Iida",
+    "Senku Ishigami",
+    "Beyoncé",
+    "Michael Jackson",
+    "Keanu Reeves",
+    "Mother Teresa",
+    "Warren Buffett",
+    "Stephen King",
+    "Agatha Christie",
+    "Freddie Mercury",
+    "Amy Poehler",
   ],
   Libra: [
-    "Ino Yamanaka", "Naruto Uzumaki", "Mikoto Uchiha",
-    "Inosuke Hashibira", "Ochaco Uraraka", "Light Yagami",
-    "Will Smith", "Kim Kardashian", "Hugh Jackman",
-    "John Lennon", "Gwyneth Paltrow", "Bruno Mars",
-    "Mahatma Gandhi", "Oscar Wilde", "Margaret Thatcher"
+    "Ino Yamanaka",
+    "Naruto Uzumaki",
+    "Mikoto Uchiha",
+    "Inosuke Hashibira",
+    "Ochaco Uraraka",
+    "Light Yagami",
+    "Will Smith",
+    "Kim Kardashian",
+    "Hugh Jackman",
+    "John Lennon",
+    "Gwyneth Paltrow",
+    "Bruno Mars",
+    "Mahatma Gandhi",
+    "Oscar Wilde",
+    "Margaret Thatcher",
   ],
   Scorpio: [
-    "L Lawliet", "Armin Arlert", "Yagura Karatachi",
-    "Muichiro Tokito", "Shoto Todoroki", "Sasuke Uchiha",
-    "Ryan Reynolds", "Emma Stone", "Leonardo DiCaprio",
-    "Bill Gates", "Hillary Clinton", "Pablo Picasso",
-    "Marie Curie", "Theodore Roosevelt", "Katy Perry"
+    "L Lawliet",
+    "Armin Arlert",
+    "Yagura Karatachi",
+    "Muichiro Tokito",
+    "Shoto Todoroki",
+    "Sasuke Uchiha",
+    "Ryan Reynolds",
+    "Emma Stone",
+    "Leonardo DiCaprio",
+    "Bill Gates",
+    "Hillary Clinton",
+    "Pablo Picasso",
+    "Marie Curie",
+    "Theodore Roosevelt",
+    "Katy Perry",
   ],
   Sagittarius: [
-    "Zabuza Momochi", "Mikoto Uchiha", "Mello",
-    "Mitsuri Kanroji", "Katsuki Bakugo", "Monkey D. Luffy",
-    "Taylor Swift", "Brad Pitt", "Miley Cyrus",
-    "Winston Churchill", "Walt Disney", "Frank Sinatra",
-    "Ludwig van Beethoven", "Jane Austen", "Jim Morrison"
+    "Zabuza Momochi",
+    "Mikoto Uchiha",
+    "Mello",
+    "Mitsuri Kanroji",
+    "Katsuki Bakugo",
+    "Monkey D. Luffy",
+    "Taylor Swift",
+    "Brad Pitt",
+    "Miley Cyrus",
+    "Winston Churchill",
+    "Walt Disney",
+    "Frank Sinatra",
+    "Ludwig van Beethoven",
+    "Jane Austen",
+    "Jim Morrison",
   ],
   Capricorn: [
-    "Levi Ackerman", "Misa Amane", "Gaara",
-    "Obanai Iguro", "Fumikage Tokoyami", "Sasori",
-    "Denzel Washington", "Michelle Obama", "Kate Middleton",
-    "Martin Luther King Jr.", "David Bowie", "Elvis Presley",
-    "Isaac Newton", "Stephen Hawking", "Dolly Parton"
+    "Levi Ackerman",
+    "Misa Amane",
+    "Gaara",
+    "Obanai Iguro",
+    "Fumikage Tokoyami",
+    "Sasori",
+    "Denzel Washington",
+    "Michelle Obama",
+    "Kate Middleton",
+    "Martin Luther King Jr.",
+    "David Bowie",
+    "Elvis Presley",
+    "Isaac Newton",
+    "Stephen Hawking",
+    "Dolly Parton",
   ],
   Aquarius: [
-    "Mikasa Ackerman", "Obito Uchiha", "Konohamaru Sarutobi",
-    "Sanemi Shinazugawa", "Katsuki Bakugo", "Killua Zoldyck",
-    "Oprah Winfrey", "Jennifer Aniston", "The Weeknd",
-    "Abraham Lincoln", "Ronald Reagan", "Bob Marley",
-    "Thomas Edison", "Charles Darwin", "Ellen DeGeneres"
+    "Mikasa Ackerman",
+    "Obito Uchiha",
+    "Konohamaru Sarutobi",
+    "Sanemi Shinazugawa",
+    "Katsuki Bakugo",
+    "Killua Zoldyck",
+    "Oprah Winfrey",
+    "Jennifer Aniston",
+    "The Weeknd",
+    "Abraham Lincoln",
+    "Ronald Reagan",
+    "Bob Marley",
+    "Thomas Edison",
+    "Charles Darwin",
+    "Ellen DeGeneres",
   ],
   Pisces: [
-    "Light Yagami", "Rin Nohara", "Isaribi",
-    "Shinobu Kocho", "Tamaki Amajiki", "Gon Freecss",
-    "Rihanna", "Justin Bieber", "Drew Barrymore",
-    "Albert Einstein", "Steve Jobs", "Kurt Cobain",
-    "Michelangelo", "Elizabeth Taylor", "Daniel Craig"
-  ]
+    "Light Yagami",
+    "Rin Nohara",
+    "Isaribi",
+    "Shinobu Kocho",
+    "Tamaki Amajiki",
+    "Gon Freecss",
+    "Rihanna",
+    "Justin Bieber",
+    "Drew Barrymore",
+    "Albert Einstein",
+    "Steve Jobs",
+    "Kurt Cobain",
+    "Michelangelo",
+    "Elizabeth Taylor",
+    "Daniel Craig",
+  ],
 };
 
 // Character data with images and quotes
@@ -645,7 +765,8 @@ const characterData = {
   },
   // New Aries Characters
   "Katsuki Bakugo": {
-    image: "https://static.wikia.nocookie.net/bokunoheroacademia/images/7/73/Katsuki_Bakugo_Headshot.png",
+    image:
+      "https://static.wikia.nocookie.net/bokunoheroacademia/images/7/73/Katsuki_Bakugo_Headshot.png",
     quotes: [
       "I'm gonna be the number one hero!",
       "Die! Die! Die!",
@@ -655,11 +776,12 @@ const characterData = {
       "Get out of my way, extras!",
       "I don't need your help!",
       "I'll surpass All Might!",
-      "You're just a stepping stone for me!"
-    ]
+      "You're just a stepping stone for me!",
+    ],
   },
   "Natsu Dragneel": {
-    image: "https://static.wikia.nocookie.net/fairytail/images/0/04/Natsu_headshot.png",
+    image:
+      "https://static.wikia.nocookie.net/fairytail/images/0/04/Natsu_headshot.png",
     quotes: [
       "I'm all fired up!",
       "We're Fairy Tail!",
@@ -669,11 +791,12 @@ const characterData = {
       "I never give up!",
       "My flames will burn everything!",
       "Happy! Let's go!",
-      "I'm getting motion sick..."
-    ]
+      "I'm getting motion sick...",
+    ],
   },
   "Edward Elric": {
-    image: "https://static.wikia.nocookie.net/fma/images/7/7c/EdwardElricEp1.png",
+    image:
+      "https://static.wikia.nocookie.net/fma/images/7/7c/EdwardElricEp1.png",
     quotes: [
       "Mankind's greatest scientific discovery may be its ability to communicate!",
       "Who are you calling a runt so small he can barely be seen?!",
@@ -683,11 +806,12 @@ const characterData = {
       "To obtain something, something of equal value must be lost.",
       "I'm not short! I'm fun-sized!",
       "Equivalent exchange!",
-      "Al, we're going to get our bodies back!"
-    ]
+      "Al, we're going to get our bodies back!",
+    ],
   },
   "Lady Gaga": {
-    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/39/Lady_Gaga_at_Joe_Biden%27s_inauguration_%28cropped_2%29.jpg/220px-Lady_Gaga_at_Joe_Biden%27s_inauguration_%28cropped_2%29.jpg",
+    image:
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/3/39/Lady_Gaga_at_Joe_Biden%27s_inauguration_%28cropped_2%29.jpg/220px-Lady_Gaga_at_Joe_Biden%27s_inauguration_%28cropped_2%29.jpg",
     quotes: [
       "Born this way, baby!",
       "Be yourself, love yourself.",
@@ -697,11 +821,12 @@ const characterData = {
       "Poker face!",
       "I live between two worlds: reality and theater.",
       "Art is life, life is art.",
-      "Dance in the dark!"
-    ]
+      "Dance in the dark!",
+    ],
   },
   "Robert Downey Jr.": {
-    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/94/Robert_Downey_Jr_2014_Comic_Con_%28cropped%29.jpg/220px-Robert_Downey_Jr_2014_Comic_Con_%28cropped%29.jpg",
+    image:
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/9/94/Robert_Downey_Jr_2014_Comic_Con_%28cropped%29.jpg/220px-Robert_Downey_Jr_2014_Comic_Con_%28cropped%29.jpg",
     quotes: [
       "I am Iron Man.",
       "Sometimes you gotta run before you can walk.",
@@ -711,11 +836,12 @@ const characterData = {
       "We have a Hulk.",
       "I can do this all day... wait, that's the other guy.",
       "Part of the journey is the end.",
-      "I am... inevitable. No wait, that's Thanos."
-    ]
+      "I am... inevitable. No wait, that's Thanos.",
+    ],
   },
   "Emma Watson": {
-    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7f/Emma_Watson_2013.jpg/220px-Emma_Watson_2013.jpg",
+    image:
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7f/Emma_Watson_2013.jpg/220px-Emma_Watson_2013.jpg",
     quotes: [
       "I don't want other people to decide who I am. I want to decide that for myself.",
       "Young girls are told you have to be the delicate princess. Hermione taught them that you can be the warrior.",
@@ -725,12 +851,13 @@ const characterData = {
       "It's a wonderful thing to be curious.",
       "I'm going to do what I want to do.",
       "Feeling beautiful has nothing to do with what you look like.",
-      "The less you reveal, the more people can wonder."
-    ]
+      "The less you reveal, the more people can wonder.",
+    ],
   },
-  // New Taurus Characters  
+  // New Taurus Characters
   "Tanjiro Kamado": {
-    image: "https://static.wikia.nocookie.net/kimetsu-no-yaiba/images/9/99/Tanjiro_anime_design.png",
+    image:
+      "https://static.wikia.nocookie.net/kimetsu-no-yaiba/images/9/99/Tanjiro_anime_design.png",
     quotes: [
       "I believe in Nezuko!",
       "I will not let my sister die!",
@@ -740,11 +867,12 @@ const characterData = {
       "Nezuko is different from other demons!",
       "I have to become stronger!",
       "Thank you for everything!",
-      "Even if you are a demon, I won't let anyone hurt my friends!"
-    ]
+      "Even if you are a demon, I won't let anyone hurt my friends!",
+    ],
   },
   "Momo Yaoyorozu": {
-    image: "https://static.wikia.nocookie.net/bokunoheroacademia/images/thumb/d/db/Momo_Yaoyorozu_Headshot.png/220px-Momo_Yaoyorozu_Headshot.png",
+    image:
+      "https://static.wikia.nocookie.net/bokunoheroacademia/images/thumb/d/db/Momo_Yaoyorozu_Headshot.png/220px-Momo_Yaoyorozu_Headshot.png",
     quotes: [
       "I must live up to everyone's expectations!",
       "Creation!",
@@ -754,11 +882,12 @@ const characterData = {
       "Knowledge is power!",
       "I won't let my friends down!",
       "Strategic planning is essential!",
-      "Everyone has their own strengths!"
-    ]
+      "Everyone has their own strengths!",
+    ],
   },
-  "Bulma": {
-    image: "https://static.wikia.nocookie.net/dragonball/images/thumb/4/4f/BulmaDBSuper.png/220px-BulmaDBSuper.png",
+  Bulma: {
+    image:
+      "https://static.wikia.nocookie.net/dragonball/images/thumb/4/4f/BulmaDBSuper.png/220px-BulmaDBSuper.png",
     quotes: [
       "I'm a genius!",
       "Vegeta, you're such a fool!",
@@ -768,11 +897,12 @@ const characterData = {
       "Money can buy anything!",
       "Capsule Corp technology!",
       "I don't have time for this!",
-      "Trunks, be careful!"
-    ]
+      "Trunks, be careful!",
+    ],
   },
   "Dwayne Johnson": {
-    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f1/Dwayne_Johnson_2%2C_2013.jpg/220px-Dwayne_Johnson_2%2C_2013.jpg",
+    image:
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f1/Dwayne_Johnson_2%2C_2013.jpg/220px-Dwayne_Johnson_2%2C_2013.jpg",
     quotes: [
       "Can you smell what The Rock is cooking?",
       "Success isn't always about greatness. It's about consistency.",
@@ -782,11 +912,12 @@ const characterData = {
       "Finally, The Rock has come back!",
       "Know your role and shut your mouth!",
       "If you smell what The Rock is cooking!",
-      "Layeth the smacketh down!"
-    ]
+      "Layeth the smacketh down!",
+    ],
   },
-  "Adele": {
-    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/32/Adele_Live_2016_tour.jpg/220px-Adele_Live_2016_tour.jpg",
+  Adele: {
+    image:
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/3/32/Adele_Live_2016_tour.jpg/220px-Adele_Live_2016_tour.jpg",
     quotes: [
       "Hello, it's me.",
       "Someone like you.",
@@ -796,11 +927,12 @@ const characterData = {
       "Make you feel my love.",
       "Turning tables on you.",
       "Easy on me, please.",
-      "Oh my God, I can't believe it!"
-    ]
+      "Oh my God, I can't believe it!",
+    ],
   },
   "George Clooney": {
-    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8d/George_Clooney_2016.jpg/220px-George_Clooney_2016.jpg",
+    image:
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8d/George_Clooney_2016.jpg/220px-George_Clooney_2016.jpg",
     quotes: [
       "I don't believe in happy endings, but I do believe in happy travels.",
       "I've been my most successful when I've been closest to failure.",
@@ -810,12 +942,13 @@ const characterData = {
       "I go on YouTube when somebody says to look something up.",
       "Peace is not just the absence of war.",
       "Art takes different forms... But it represents something that is basic in all of us.",
-      "Run for something, not against somebody."
-    ]
+      "Run for something, not against somebody.",
+    ],
   },
   // More Aries Characters
   "Elton John": {
-    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9a/Elton_John_2011_Shankbone_2.JPG/220px-Elton_John_2011_Shankbone_2.JPG",
+    image:
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9a/Elton_John_2011_Shankbone_2.JPG/220px-Elton_John_2011_Shankbone_2.JPG",
     quotes: [
       "I'm still standing after all this time.",
       "Rocket Man burning out his fuse up here alone.",
@@ -825,11 +958,12 @@ const characterData = {
       "I'm a rocket man!",
       "Your song is quite a thing.",
       "Candle in the wind.",
-      "The circle of life moves us all."
-    ]
+      "The circle of life moves us all.",
+    ],
   },
   "Mariah Carey": {
-    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/Mariah_Carey_13_Edwards_Dec_2018.jpg/220px-Mariah_Carey_13_Edwards_Dec_2018.jpg",
+    image:
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/Mariah_Carey_13_Edwards_Dec_2018.jpg/220px-Mariah_Carey_13_Edwards_Dec_2018.jpg",
     quotes: [
       "All I want for Christmas is you.",
       "When you believe, miracles happen.",
@@ -839,11 +973,12 @@ const characterData = {
       "Hero lies in you.",
       "Always be my baby.",
       "Emotions running wild.",
-      "Fantasy, sweet fantasy."
-    ]
+      "Fantasy, sweet fantasy.",
+    ],
   },
   "Jackie Chan": {
-    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/33/Jackie_Chan_2016.jpg/220px-Jackie_Chan_2016.jpg",
+    image:
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/3/33/Jackie_Chan_2016.jpg/220px-Jackie_Chan_2016.jpg",
     quotes: [
       "I don't want to be a hero, I want to be a legend.",
       "I never wanted to be the next Bruce Lee. I just wanted to become the first Jackie Chan.",
@@ -853,12 +988,13 @@ const characterData = {
       "I'm good for some things, bad for a lot of things.",
       "Coffee is a language in itself.",
       "We're all the same inside.",
-      "Family first, then work."
-    ]
+      "Family first, then work.",
+    ],
   },
   // New Gemini Characters
   "Zenitsu Agatsuma": {
-    image: "https://static.wikia.nocookie.net/kimetsu-no-yaiba/images/2/28/Zenitsu_anime_design.png",
+    image:
+      "https://static.wikia.nocookie.net/kimetsu-no-yaiba/images/2/28/Zenitsu_anime_design.png",
     quotes: [
       "I want to live a quiet life!",
       "Thunder Breathing, First Form!",
@@ -868,11 +1004,12 @@ const characterData = {
       "Don't underestimate me!",
       "Thunderclap and Flash!",
       "I might be a coward, but I'll still fight!",
-      "Protect what's important to you!"
-    ]
+      "Protect what's important to you!",
+    ],
   },
   "Denki Kaminari": {
-    image: "https://static.wikia.nocookie.net/bokunoheroacademia/images/thumb/8/8c/Denki_Kaminari_Headshot.png/220px-Denki_Kaminari_Headshot.png",
+    image:
+      "https://static.wikia.nocookie.net/bokunoheroacademia/images/thumb/8/8c/Denki_Kaminari_Headshot.png/220px-Denki_Kaminari_Headshot.png",
     quotes: [
       "Electrification!",
       "Wheyyy!",
@@ -882,11 +1019,12 @@ const characterData = {
       "Electric shock!",
       "I'm fully charged!",
       "Static electricity!",
-      "Short circuit mode activated!"
-    ]
+      "Short circuit mode activated!",
+    ],
   },
   "Kuroko Tetsuya": {
-    image: "https://static.wikia.nocookie.net/kurokonobasuke/images/thumb/f/f4/Kuroko_anime.png/220px-Kuroko_anime.png",
+    image:
+      "https://static.wikia.nocookie.net/kurokonobasuke/images/thumb/f/f4/Kuroko_anime.png/220px-Kuroko_anime.png",
     quotes: [
       "I am a shadow.",
       "The only one who can beat me is me.",
@@ -896,11 +1034,12 @@ const characterData = {
       "I'm not good at expressing myself.",
       "I believe in my teammates.",
       "Phantom shot!",
-      "I'll always support my team from the shadows."
-    ]
+      "I'll always support my team from the shadows.",
+    ],
   },
   "Johnny Depp": {
-    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/21/Johnny_Depp_2020.jpg/220px-Johnny_Depp_2020.jpg",
+    image:
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/2/21/Johnny_Depp_2020.jpg/220px-Johnny_Depp_2020.jpg",
     quotes: [
       "The only creatures that are evolved enough to convey pure love are dogs and infants.",
       "I think the thing to do is enjoy the ride while you're on it.",
@@ -910,22 +1049,178 @@ const characterData = {
       "I'm an old-fashioned guy... I want to be an old man with a beer belly sitting on a porch.",
       "The term 'serious actor' is kind of an oxymoron, isn't it?",
       "I like the challenge of trying different things and wondering whether it's going to work or whether I'm going to fall flat on my face.",
-      "We're all damaged in our own way. Nobody's perfect."
-    ]
+      "We're all damaged in our own way. Nobody's perfect.",
+    ],
   },
   // Key celebrities and characters (simplified entries for space)
-  "Angelina Jolie": { image: "", quotes: ["Be yourself.", "Take risks.", "Fight for what you believe in.", "Family comes first.", "Never give up on your dreams.", "Help others in need.", "Stand up for justice.", "Embrace your uniqueness.", "Love unconditionally."] },
-  "Kanye West": { image: "", quotes: ["I'm a genius.", "Believe in yourself.", "Create your own path.", "Art is everything.", "Push boundaries.", "Never settle.", "Dream big.", "Express yourself.", "Be legendary."] },
-  "Tom Hanks": { image: "", quotes: ["Life is like a box of chocolates.", "There's no crying in baseball!", "Houston, we have a problem.", "Run, Forrest, run!", "You've got a friend in me.", "Keep moving forward.", "Be kind to others.", "Never lose hope.", "Family is everything."] },
-  "Selena Gomez": { image: "", quotes: ["Kill them with kindness.", "You are who you surround yourself with.", "Be yourself, always.", "Confidence is the best outfit.", "Love yourself first.", "Stay strong.", "Dream big.", "Help others shine.", "Believe in magic."] },
-  "Jennifer Lopez": { image: "", quotes: ["Let's get loud!", "You have to stand up and say, 'There's nothing wrong with me or my shape'.", "I only do what my gut tells me to.", "Dream big and work hard.", "Age is just a number.", "Love yourself.", "Never give up.", "Be fabulous.", "Dance like nobody's watching."] },
-  "Barack Obama": { image: "", quotes: ["Yes we can!", "Change will not come if we wait for some other person or some other time.", "The best way to not feel hopeless is to get up and do something.", "We are the ones we've been waiting for.", "Hope is not blind optimism.", "Progress is possible.", "Yes we did.", "Fired up, ready to go!", "We rise by lifting others."] },
-  "Beyoncé": { image: "", quotes: ["Who run the world? Girls!", "I'm not bossy, I'm the boss.", "Power is not given to you. You have to take it.", "Your self-worth is determined by you.", "We all have our imperfections.", "I'm a human being and I fall in love.", "Embrace your uniqueness.", "Flawless.", "Formation!"] },
-  "Michael Jackson": { image: "", quotes: ["I'm just like anyone. I cut and I bleed.", "The greatest education in the world is watching the masters at work.", "Just because it's in print doesn't mean it's the gospel.", "Heal the world.", "Beat it!", "Smooth criminal.", "You rock my world.", "Man in the mirror.", "They don't care about us."] },
-  "Will Smith": { image: "", quotes: ["The first step is you have to say that you can.", "Fear is not real.", "If you're not making someone else's life better, then you're wasting your time.", "Greatness is not this wonderful, esoteric, elusive, godlike feature.", "Welcome to Earth!", "I, Robot.", "Independence Day!", "Men in Black.", "Pursuit of happiness."] },
-  "Taylor Swift": { image: "", quotes: ["Shake it off!", "We are never getting back together.", "Look what you made me do.", "I knew you were trouble.", "Love story.", "You belong with me.", "Bad blood.", "Blank space.", "Anti-hero."] },
-  "Leonardo DiCaprio": { image: "", quotes: ["I'm the king of the world!", "Climate change is real.", "Every generation has the responsibility to be stewards of the environment.", "I just want to make great films.", "Inception!", "The Wolf of Wall Street!", "The Revenant.", "Titanic forever.", "Don't let go, Jack!"] },
-  "Oprah Winfrey": { image: "", quotes: ["You get a car! You get a car! Everybody gets a car!", "The biggest adventure you can take is to live the life of your dreams.", "Be thankful for what you have.", "What I know for sure.", "Live your best life.", "The secret to being happy is accepting where you are in life.", "Where there is no struggle, there is no strength.", "You become what you believe.", "Aha moment!"] }
+  "Angelina Jolie": {
+    image: "",
+    quotes: [
+      "Be yourself.",
+      "Take risks.",
+      "Fight for what you believe in.",
+      "Family comes first.",
+      "Never give up on your dreams.",
+      "Help others in need.",
+      "Stand up for justice.",
+      "Embrace your uniqueness.",
+      "Love unconditionally.",
+    ],
+  },
+  "Kanye West": {
+    image: "",
+    quotes: [
+      "I'm a genius.",
+      "Believe in yourself.",
+      "Create your own path.",
+      "Art is everything.",
+      "Push boundaries.",
+      "Never settle.",
+      "Dream big.",
+      "Express yourself.",
+      "Be legendary.",
+    ],
+  },
+  "Tom Hanks": {
+    image: "",
+    quotes: [
+      "Life is like a box of chocolates.",
+      "There's no crying in baseball!",
+      "Houston, we have a problem.",
+      "Run, Forrest, run!",
+      "You've got a friend in me.",
+      "Keep moving forward.",
+      "Be kind to others.",
+      "Never lose hope.",
+      "Family is everything.",
+    ],
+  },
+  "Selena Gomez": {
+    image: "",
+    quotes: [
+      "Kill them with kindness.",
+      "You are who you surround yourself with.",
+      "Be yourself, always.",
+      "Confidence is the best outfit.",
+      "Love yourself first.",
+      "Stay strong.",
+      "Dream big.",
+      "Help others shine.",
+      "Believe in magic.",
+    ],
+  },
+  "Jennifer Lopez": {
+    image: "",
+    quotes: [
+      "Let's get loud!",
+      "You have to stand up and say, 'There's nothing wrong with me or my shape'.",
+      "I only do what my gut tells me to.",
+      "Dream big and work hard.",
+      "Age is just a number.",
+      "Love yourself.",
+      "Never give up.",
+      "Be fabulous.",
+      "Dance like nobody's watching.",
+    ],
+  },
+  "Barack Obama": {
+    image: "",
+    quotes: [
+      "Yes we can!",
+      "Change will not come if we wait for some other person or some other time.",
+      "The best way to not feel hopeless is to get up and do something.",
+      "We are the ones we've been waiting for.",
+      "Hope is not blind optimism.",
+      "Progress is possible.",
+      "Yes we did.",
+      "Fired up, ready to go!",
+      "We rise by lifting others.",
+    ],
+  },
+  Beyoncé: {
+    image: "",
+    quotes: [
+      "Who run the world? Girls!",
+      "I'm not bossy, I'm the boss.",
+      "Power is not given to you. You have to take it.",
+      "Your self-worth is determined by you.",
+      "We all have our imperfections.",
+      "I'm a human being and I fall in love.",
+      "Embrace your uniqueness.",
+      "Flawless.",
+      "Formation!",
+    ],
+  },
+  "Michael Jackson": {
+    image: "",
+    quotes: [
+      "I'm just like anyone. I cut and I bleed.",
+      "The greatest education in the world is watching the masters at work.",
+      "Just because it's in print doesn't mean it's the gospel.",
+      "Heal the world.",
+      "Beat it!",
+      "Smooth criminal.",
+      "You rock my world.",
+      "Man in the mirror.",
+      "They don't care about us.",
+    ],
+  },
+  "Will Smith": {
+    image: "",
+    quotes: [
+      "The first step is you have to say that you can.",
+      "Fear is not real.",
+      "If you're not making someone else's life better, then you're wasting your time.",
+      "Greatness is not this wonderful, esoteric, elusive, godlike feature.",
+      "Welcome to Earth!",
+      "I, Robot.",
+      "Independence Day!",
+      "Men in Black.",
+      "Pursuit of happiness.",
+    ],
+  },
+  "Taylor Swift": {
+    image: "",
+    quotes: [
+      "Shake it off!",
+      "We are never getting back together.",
+      "Look what you made me do.",
+      "I knew you were trouble.",
+      "Love story.",
+      "You belong with me.",
+      "Bad blood.",
+      "Blank space.",
+      "Anti-hero.",
+    ],
+  },
+  "Leonardo DiCaprio": {
+    image: "",
+    quotes: [
+      "I'm the king of the world!",
+      "Climate change is real.",
+      "Every generation has the responsibility to be stewards of the environment.",
+      "I just want to make great films.",
+      "Inception!",
+      "The Wolf of Wall Street!",
+      "The Revenant.",
+      "Titanic forever.",
+      "Don't let go, Jack!",
+    ],
+  },
+  "Oprah Winfrey": {
+    image: "",
+    quotes: [
+      "You get a car! You get a car! Everybody gets a car!",
+      "The biggest adventure you can take is to live the life of your dreams.",
+      "Be thankful for what you have.",
+      "What I know for sure.",
+      "Live your best life.",
+      "The secret to being happy is accepting where you are in life.",
+      "Where there is no struggle, there is no strength.",
+      "You become what you believe.",
+      "Aha moment!",
+    ],
+  },
 };
 
 // Comprehensive compatibility scoring system (0-100)
@@ -2197,7 +2492,7 @@ export default function ZodiacCompatibility({ user, onLogin }) {
 
   // Sign Selection Page
   const renderSelectionPage = () => (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 text-white p-4 sm:p-6 md:p-8">
+    <div className="flex-1 bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 text-white p-4 sm:p-6 md:p-8">
       <div className="max-w-6xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -2256,7 +2551,7 @@ export default function ZodiacCompatibility({ user, onLogin }) {
     }
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 text-white p-4 sm:p-6 md:p-8">
+      <div className="flex-1 bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 text-white p-4 sm:p-6 md:p-8">
         <div className="max-w-6xl mx-auto">
           {/* Header with back button */}
           <motion.div
@@ -2506,8 +2801,8 @@ export default function ZodiacCompatibility({ user, onLogin }) {
                 isQueuing
                   ? "bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700"
                   : !user
-                  ? "bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700"
-                  : "bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700"
+                    ? "bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700"
+                    : "bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700"
               } text-white`}
             >
               {!user ? (
@@ -2569,7 +2864,7 @@ export default function ZodiacCompatibility({ user, onLogin }) {
       content = getCompatibilityContent(
         lockedSign,
         selectedPartner,
-        maleCompatibilityData
+        maleCompatibilityData,
       );
       perspectiveTitle = "Male Perspective";
       perspectiveIcon = "♂";
@@ -2578,7 +2873,7 @@ export default function ZodiacCompatibility({ user, onLogin }) {
       content = getCompatibilityContent(
         lockedSign,
         selectedPartner,
-        femaleCompatibilityData
+        femaleCompatibilityData,
       );
       perspectiveTitle = "Female Perspective";
       perspectiveIcon = "♀";
@@ -2587,7 +2882,7 @@ export default function ZodiacCompatibility({ user, onLogin }) {
       content = getCompatibilityContent(
         lockedSign,
         selectedPartner,
-        planetaryData
+        planetaryData,
       );
       perspectiveTitle = "Planetary Influences";
       perspectiveIcon = "⭐";
@@ -2595,7 +2890,7 @@ export default function ZodiacCompatibility({ user, onLogin }) {
     }
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 text-white p-4 sm:p-6 md:p-8">
+      <div className="flex-1 bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 text-white p-4 sm:p-6 md:p-8">
         <div className="max-w-4xl mx-auto">
           {/* Header with navigation */}
           <motion.div
@@ -2716,6 +3011,7 @@ export default function ZodiacCompatibility({ user, onLogin }) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
+            className="flex-1 flex flex-col"
           >
             {renderSelectionPage()}
           </motion.div>
@@ -2726,6 +3022,7 @@ export default function ZodiacCompatibility({ user, onLogin }) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
+            className="flex-1 flex flex-col"
           >
             {renderResultsPage()}
           </motion.div>

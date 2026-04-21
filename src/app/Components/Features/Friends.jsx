@@ -339,7 +339,7 @@ const Friends = ({ user, onLogin }) => {
   }
 
   return (
-    <div className="bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 rounded-xl p-4 md:p-6">
+    <div className="flex-1 bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 p-4 md:p-6">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="flex flex-wrap justify-between items-center mb-6 gap-3">

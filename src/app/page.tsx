@@ -211,7 +211,7 @@ export default function Home() {
     };
 
     return (
-      <div className="flex flex-col lg:flex-row min-h-screen h-screen bg-gray-50 overflow-hidden">
+      <div className="flex flex-col lg:flex-row min-h-screen h-screen bg-gradient-to-br from-purple-950 via-blue-950 to-indigo-950 overflow-hidden">
         <Sidebar
           active={active}
           setActive={setActive}

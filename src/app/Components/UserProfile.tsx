@@ -19,8 +19,8 @@ const UserProfile: React.FC<UserProfileProps> = ({
         animate={{ opacity: 1, y: 0 }}
         className={
           isEmbedded
-            ? "p-4 sm:p-6 bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 rounded-xl"
-            : "min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 p-4 sm:p-6"
+            ? "flex-1 p-4 sm:p-6 bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900"
+            : "flex-1 bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 p-4 sm:p-6"
         }
       >
         <div className="max-w-md mx-auto bg-black/30 backdrop-blur-md rounded-xl p-6 text-center">
@@ -52,8 +52,8 @@ const UserProfile: React.FC<UserProfileProps> = ({
       animate={{ opacity: 1, y: 0 }}
       className={
         isEmbedded
-          ? "p-6 bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 rounded-xl"
-          : "min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 p-6"
+          ? "flex-1 p-6 bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900"
+          : "flex-1 bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 p-6"
       }
     >
       <div className="max-w-4xl mx-auto">

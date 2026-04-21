@@ -3102,7 +3102,7 @@ export default function MainContent({ active, user, onLogin, setActive }) {
 
   return (
     <main
-      className={`flex-1 ${active === "chat" ? "flex flex-col overflow-hidden p-0" : "overflow-auto p-4 md:p-10"}`}
+      className={`flex-1 flex flex-col ${active === "chat" ? "overflow-hidden" : "overflow-auto bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900"}`}
     >
       {/* Active Chat Notification */}
       <AnimatePresence>
@@ -3139,7 +3139,7 @@ export default function MainContent({ active, user, onLogin, setActive }) {
       </AnimatePresence>
 
       {active === "zodiac" && (
-        <div>
+        <div className="flex-1 flex flex-col min-h-0">
           <ZodiacCompatibility user={user} onLogin={onLogin} />
         </div>
       )}
@@ -3891,21 +3891,22 @@ export default function MainContent({ active, user, onLogin, setActive }) {
         </div>
       )}
       {active === "storyteller" && (
-        <UserProfile
-          userProfile={user}
-          onEdit={() => {}} // No edit functionality needed in embedded view
-          onClose={() => {}} // No close functionality needed in embedded view
-          isEmbedded={true}
-        />
+        <div className="flex-1 flex flex-col min-h-0">
+          <UserProfile
+            userProfile={user}
+            onEdit={() => {}} // No edit functionality needed in embedded view
+            onClose={() => {}} // No close functionality needed in embedded view
+            isEmbedded={true}
+          />
+        </div>
       )}
       {active === "dreammaker" && (
-        <div>
+        <div className="flex-1 flex flex-col min-h-0">
           {user ? (
-            <div>
-              <h1 className="text-3xl font-bold mb-6 text-indigo-900">
-                Dreammaker
-              </h1>
-              <p className="text-gray-700 text-lg">
+            <div className="flex-1 bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 text-white p-8 flex flex-col items-center justify-center">
+              <div className="text-6xl mb-6">🌙</div>
+              <h1 className="text-4xl font-bold mb-4 text-white">Dreammaker</h1>
+              <p className="text-purple-200 text-lg">
                 Bring your dreams to life with AI.
               </p>
             </div>
@@ -3915,12 +3916,12 @@ export default function MainContent({ active, user, onLogin, setActive }) {
         </div>
       )}
       {active === "friends" && (
-        <div>
+        <div className="flex-1 flex flex-col min-h-0">
           <Friends user={user} onLogin={onLogin} />
         </div>
       )}
       {active === "notes" && (
-        <div>
+        <div className="flex-1 flex flex-col min-h-0">
           {user ? (
             <Notes user={user} />
           ) : (
@@ -3929,7 +3930,7 @@ export default function MainContent({ active, user, onLogin, setActive }) {
         </div>
       )}
       {active === "cardgame" && (
-        <div>
+        <div className="flex-1 flex flex-col min-h-0">
           <MysticElements user={user} onLogin={onLogin} />
         </div>
       )}

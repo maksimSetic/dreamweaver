@@ -304,302 +304,320 @@ function MysticElements() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto p-3 md:p-6">
-      <div className="text-center mb-8">
-        <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-cyan-600 to-purple-600 bg-clip-text text-transparent">
-          🧠 Conscious vs Subconscious 🌙
-        </h1>
-        <p className="text-gray-700 text-lg mb-6">
-          Netrunner-style psychological warfare! Conscious infiltrates,
-          Subconscious defends.
-        </p>
+    <div className="flex-1 bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 text-white p-3 md:p-6">
+      <div className="max-w-6xl mx-auto">
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">
+            🧠 Conscious vs Subconscious 🌙
+          </h1>
+          <p className="text-purple-200 text-lg mb-6">
+            Netrunner-style psychological warfare! Conscious infiltrates,
+            Subconscious defends.
+          </p>
 
-        {!gameStarted && gamePhase !== "game_over" ? (
-          <motion.button
-            onClick={startGame}
-            className="px-8 py-4 bg-gradient-to-r from-cyan-500 to-purple-500 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all cursor-pointer"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            Begin Infiltration
-          </motion.button>
-        ) : gamePhase === "game_over" ? (
-          <div className="text-center mb-6">
-            <div className="text-4xl font-bold mb-4">
-              {winner === "Tie" ? "🤝 Stalemate!" : `🏆 ${winner} Prevails!`}
-            </div>
-            <div className="text-xl mb-4">
-              Access Points: Conscious: {consciousScore} | Subconscious:{" "}
-              {subconsciousScore}
-            </div>
+          {!gameStarted && gamePhase !== "game_over" ? (
             <motion.button
               onClick={startGame}
-              className="px-8 py-4 bg-gradient-to-r from-green-500 to-blue-500 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all cursor-pointer"
+              className="px-8 py-4 bg-gradient-to-r from-cyan-500 to-purple-500 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all cursor-pointer"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              New Infiltration
+              Begin Infiltration
             </motion.button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-3 gap-2 md:gap-6 mb-6 text-center text-sm md:text-base">
-            <div className="bg-cyan-100 p-4 rounded-lg">
-              <div className="text-2xl font-bold text-cyan-800">
-                🧠 Conscious
+          ) : gamePhase === "game_over" ? (
+            <div className="text-center mb-6">
+              <div className="text-4xl font-bold mb-4">
+                {winner === "Tie" ? "🤝 Stalemate!" : `🏆 ${winner} Prevails!`}
               </div>
-              <div className="text-lg">Credits: {consciousCredits}</div>
-              <div className="text-lg">Access Points: {consciousScore}/7</div>
+              <div className="text-xl mb-4">
+                Access Points: Conscious: {consciousScore} | Subconscious:{" "}
+                {subconsciousScore}
+              </div>
+              <motion.button
+                onClick={startGame}
+                className="px-8 py-4 bg-gradient-to-r from-green-500 to-blue-500 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all cursor-pointer"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                New Infiltration
+              </motion.button>
             </div>
-            <div className="bg-gray-100 p-4 rounded-lg">
-              <div className="text-xl font-bold">Turn {currentTurn}/10</div>
-              <div className="text-lg font-semibold text-purple-600">
-                {gamePhase === "conscious_turn"
-                  ? "Conscious Turn"
-                  : "Subconscious Turn"}
+          ) : (
+            <div className="grid grid-cols-3 gap-2 md:gap-6 mb-6 text-center text-sm md:text-base">
+              <div className="bg-cyan-900/50 border border-cyan-500/30 p-4 rounded-lg">
+                <div className="text-2xl font-bold text-cyan-300">
+                  🧠 Conscious
+                </div>
+                <div className="text-lg text-cyan-100">
+                  Credits: {consciousCredits}
+                </div>
+                <div className="text-lg text-cyan-100">
+                  Access Points: {consciousScore}/7
+                </div>
               </div>
-              {lastAction && (
-                <div className="text-sm mt-2 p-2 bg-white rounded">
-                  {lastAction.type === "successful_run" &&
-                    `🎯 ${lastAction.player} infiltrated ${lastAction.server} (+${lastAction.reward})`}
-                  {lastAction.type === "failed_run" &&
-                    `❌ ${lastAction.player} failed to access ${lastAction.server}`}
-                  {lastAction.type === "install" &&
-                    `⚡ ${lastAction.player} installed ${lastAction.card}`}
-                  {lastAction.type === "defend" &&
-                    `🛡️ ${lastAction.player} defended ${lastAction.server} with ${lastAction.card}`}
+              <div className="bg-white/10 border border-white/20 p-4 rounded-lg">
+                <div className="text-xl font-bold text-white">
+                  Turn {currentTurn}/10
+                </div>
+                <div className="text-lg font-semibold text-purple-300">
+                  {gamePhase === "conscious_turn"
+                    ? "Conscious Turn"
+                    : "Subconscious Turn"}
+                </div>
+                {lastAction && (
+                  <div className="text-sm mt-2 p-2 bg-white/10 rounded text-gray-200">
+                    {lastAction.type === "successful_run" &&
+                      `🎯 ${lastAction.player} infiltrated ${lastAction.server} (+${lastAction.reward})`}
+                    {lastAction.type === "failed_run" &&
+                      `❌ ${lastAction.player} failed to access ${lastAction.server}`}
+                    {lastAction.type === "install" &&
+                      `⚡ ${lastAction.player} installed ${lastAction.card}`}
+                    {lastAction.type === "defend" &&
+                      `🛡️ ${lastAction.player} defended ${lastAction.server} with ${lastAction.card}`}
+                  </div>
+                )}
+              </div>
+              <div className="bg-purple-900/50 border border-purple-500/30 p-4 rounded-lg">
+                <div className="text-2xl font-bold text-purple-300">
+                  🌙 Subconscious
+                </div>
+                <div className="text-lg text-purple-100">
+                  Credits: {subconsciousCredits}
+                </div>
+                <div className="text-lg text-purple-100">
+                  Defense Score: {subconsciousScore}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {gameStarted && gamePhase !== "game_over" && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
+          >
+            {/* Servers Section */}
+            <div className="mb-8">
+              <h3 className="text-2xl font-bold mb-4 text-center text-white">
+                🏛️ Subconscious Servers 🏛️
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {Object.entries(servers).map(([serverKey, server]) => (
+                  <motion.div
+                    key={serverKey}
+                    className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                      targetServer === serverKey
+                        ? "border-purple-400 bg-purple-800/50"
+                        : "border-white/20 bg-white/10 hover:border-purple-400/50"
+                    }`}
+                    onClick={() => {
+                      if (gamePhase === "subconscious_turn") {
+                        setTargetServer(
+                          targetServer === serverKey ? null : serverKey,
+                        );
+                      } else if (gamePhase === "conscious_turn") {
+                        attemptRun(serverKey);
+                      }
+                    }}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <div className="text-center">
+                      <div className="text-2xl mb-2">{server.icon}</div>
+                      <div className="font-bold text-lg text-white">
+                        {server.name}
+                      </div>
+                      <div className="text-sm text-purple-200 mb-2">
+                        {server.description}
+                      </div>
+                      <div className="text-sm">
+                        <div>Defense Required: {server.defenseRequired}</div>
+                        <div>Reward: {server.reward} points</div>
+                        <div>Defenses: {server.defenses.length}</div>
+                      </div>
+                      {server.defenses.length > 0 && (
+                        <div className="mt-2">
+                          {server.defenses.map((defense, idx) => (
+                            <div
+                              key={idx}
+                              className="text-xs bg-purple-700/60 border border-purple-500/30 rounded px-2 py-1 m-1 inline-block text-purple-200"
+                            >
+                              🛡️ {defense.name} ({defense.strength})
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+
+            {/* Current Player's Hand */}
+            <div className="mb-8">
+              <h3
+                className={`text-2xl font-bold mb-4 text-center ${
+                  gamePhase === "conscious_turn"
+                    ? "text-cyan-300"
+                    : "text-purple-300"
+                }`}
+              >
+                {gamePhase === "conscious_turn"
+                  ? "🧠 Conscious Programs"
+                  : "🌙 Subconscious Defenses"}
+              </h3>
+              <div className="flex justify-center gap-4 flex-wrap">
+                {(gamePhase === "conscious_turn"
+                  ? consciousHand
+                  : subconsciousHand
+                ).map((card) => (
+                  <motion.div
+                    key={card.id}
+                    onClick={() => playCard(card.id)}
+                    className={`relative w-32 h-48 rounded-xl cursor-pointer transition-all ${
+                      selectedCards.includes(card.id)
+                        ? "ring-4 ring-yellow-400 transform -translate-y-2"
+                        : "hover:transform hover:-translate-y-1"
+                    } ${
+                      (gamePhase === "conscious_turn" &&
+                        consciousCredits >= card.cost) ||
+                      (gamePhase === "subconscious_turn" &&
+                        subconsciousCredits >= card.cost &&
+                        targetServer)
+                        ? "opacity-100"
+                        : "opacity-50"
+                    }`}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <div
+                      className={`w-full h-full bg-gradient-to-br ${
+                        gamePhase === "conscious_turn"
+                          ? "from-cyan-400 to-blue-600"
+                          : "from-purple-400 to-pink-600"
+                      } rounded-xl shadow-lg flex flex-col items-center justify-center text-white p-2`}
+                    >
+                      <div className="text-3xl mb-2">{card.icon}</div>
+                      <div className="text-sm font-bold text-center">
+                        {card.name}
+                      </div>
+                      <div className="text-xs mt-1">Cost: {card.cost}</div>
+                      <div className="text-xs">Strength: {card.strength}</div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="text-center mb-8 space-x-4">
+              {gamePhase === "subconscious_turn" && targetServer && (
+                <div className="text-sm mb-2 text-purple-600">
+                  🎯 Selected Server: {SERVERS[targetServer].name}
                 </div>
               )}
+              <motion.button
+                onClick={endTurn}
+                className="px-6 py-3 bg-gradient-to-r from-gray-500 to-gray-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all cursor-pointer"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                End Turn
+              </motion.button>
             </div>
-            <div className="bg-purple-100 p-4 rounded-lg">
-              <div className="text-2xl font-bold text-purple-800">
-                🌙 Subconscious
+
+            {/* Game Instructions */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.5 }}
+              className="bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10 mb-6"
+            >
+              <h3 className="text-xl font-bold mb-4 text-center text-white">
+                How to Play
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div className="p-3 bg-cyan-900/40 border border-cyan-500/20 rounded-lg">
+                  <h4 className="font-bold text-cyan-300 mb-2">
+                    🧠 Conscious (Runner)
+                  </h4>
+                  <ul className="space-y-1 text-gray-300">
+                    <li>• Install programs by clicking cards</li>
+                    <li>• Run on servers by clicking them</li>
+                    <li>• Need enough credits to break defenses</li>
+                    <li>• Win by reaching 7 access points</li>
+                  </ul>
+                </div>
+                <div className="p-3 bg-purple-900/40 border border-purple-500/20 rounded-lg">
+                  <h4 className="font-bold text-purple-300 mb-2">
+                    🌙 Subconscious (Corp)
+                  </h4>
+                  <ul className="space-y-1 text-gray-300">
+                    <li>• Select a server first</li>
+                    <li>• Install defenses on selected server</li>
+                    <li>• Protect your valuable data</li>
+                    <li>• Win by preventing access</li>
+                  </ul>
+                </div>
               </div>
-              <div className="text-lg">Credits: {subconsciousCredits}</div>
-              <div className="text-lg">Defense Score: {subconsciousScore}</div>
-            </div>
-          </div>
+            </motion.div>
+
+            {/* Spell Combinations Guide */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.5 }}
+              className="bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10"
+            >
+              <h3 className="text-xl font-bold mb-4 text-center text-white">
+                Card Types
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div>
+                  <h4 className="font-bold text-cyan-300 mb-2">
+                    🧠 Conscious Programs
+                  </h4>
+                  {Object.entries(CONSCIOUS_CARDS).map(([key, card]) => (
+                    <div
+                      key={key}
+                      className="flex items-center gap-2 p-2 bg-cyan-900/40 border border-cyan-500/20 rounded-lg mb-1"
+                    >
+                      <span>{card.icon}</span>
+                      <span className="font-semibold text-white">
+                        {card.name}
+                      </span>
+                      <span className="text-cyan-400">
+                        ({card.cost}₵, {card.strength}💪)
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                <div>
+                  <h4 className="font-bold text-purple-300 mb-2">
+                    🌙 Subconscious Defenses
+                  </h4>
+                  {Object.entries(SUBCONSCIOUS_CARDS).map(([key, card]) => (
+                    <div
+                      key={key}
+                      className="flex items-center gap-2 p-2 bg-purple-900/40 border border-purple-500/20 rounded-lg mb-1"
+                    >
+                      <span>{card.icon}</span>
+                      <span className="font-semibold text-white">
+                        {card.name}
+                      </span>
+                      <span className="text-purple-400">
+                        ({card.cost}₵, {card.strength}🛡️)
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
         )}
       </div>
-
-      {gameStarted && gamePhase !== "game_over" && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, ease: "easeOut" }}
-        >
-          {/* Servers Section */}
-          <div className="mb-8">
-            <h3 className="text-2xl font-bold mb-4 text-center text-gray-800">
-              🏛️ Subconscious Servers 🏛️
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {Object.entries(servers).map(([serverKey, server]) => (
-                <motion.div
-                  key={serverKey}
-                  className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                    targetServer === serverKey
-                      ? "border-purple-400 bg-purple-100"
-                      : "border-gray-300 bg-white hover:border-purple-300"
-                  }`}
-                  onClick={() => {
-                    if (gamePhase === "subconscious_turn") {
-                      setTargetServer(
-                        targetServer === serverKey ? null : serverKey,
-                      );
-                    } else if (gamePhase === "conscious_turn") {
-                      attemptRun(serverKey);
-                    }
-                  }}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <div className="text-center">
-                    <div className="text-2xl mb-2">{server.icon}</div>
-                    <div className="font-bold text-lg">{server.name}</div>
-                    <div className="text-sm text-gray-600 mb-2">
-                      {server.description}
-                    </div>
-                    <div className="text-sm">
-                      <div>Defense Required: {server.defenseRequired}</div>
-                      <div>Reward: {server.reward} points</div>
-                      <div>Defenses: {server.defenses.length}</div>
-                    </div>
-                    {server.defenses.length > 0 && (
-                      <div className="mt-2">
-                        {server.defenses.map((defense, idx) => (
-                          <div
-                            key={idx}
-                            className="text-xs bg-purple-200 rounded px-2 py-1 m-1 inline-block"
-                          >
-                            🛡️ {defense.name} ({defense.strength})
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-
-          {/* Current Player's Hand */}
-          <div className="mb-8">
-            <h3
-              className={`text-2xl font-bold mb-4 text-center ${
-                gamePhase === "conscious_turn"
-                  ? "text-cyan-800"
-                  : "text-purple-800"
-              }`}
-            >
-              {gamePhase === "conscious_turn"
-                ? "🧠 Conscious Programs"
-                : "🌙 Subconscious Defenses"}
-            </h3>
-            <div className="flex justify-center gap-4 flex-wrap">
-              {(gamePhase === "conscious_turn"
-                ? consciousHand
-                : subconsciousHand
-              ).map((card) => (
-                <motion.div
-                  key={card.id}
-                  onClick={() => playCard(card.id)}
-                  className={`relative w-32 h-48 rounded-xl cursor-pointer transition-all ${
-                    selectedCards.includes(card.id)
-                      ? "ring-4 ring-yellow-400 transform -translate-y-2"
-                      : "hover:transform hover:-translate-y-1"
-                  } ${
-                    (gamePhase === "conscious_turn" &&
-                      consciousCredits >= card.cost) ||
-                    (gamePhase === "subconscious_turn" &&
-                      subconsciousCredits >= card.cost &&
-                      targetServer)
-                      ? "opacity-100"
-                      : "opacity-50"
-                  }`}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <div
-                    className={`w-full h-full bg-gradient-to-br ${
-                      gamePhase === "conscious_turn"
-                        ? "from-cyan-400 to-blue-600"
-                        : "from-purple-400 to-pink-600"
-                    } rounded-xl shadow-lg flex flex-col items-center justify-center text-white p-2`}
-                  >
-                    <div className="text-3xl mb-2">{card.icon}</div>
-                    <div className="text-sm font-bold text-center">
-                      {card.name}
-                    </div>
-                    <div className="text-xs mt-1">Cost: {card.cost}</div>
-                    <div className="text-xs">Strength: {card.strength}</div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-
-          {/* Action Buttons */}
-          <div className="text-center mb-8 space-x-4">
-            {gamePhase === "subconscious_turn" && targetServer && (
-              <div className="text-sm mb-2 text-purple-600">
-                🎯 Selected Server: {SERVERS[targetServer].name}
-              </div>
-            )}
-            <motion.button
-              onClick={endTurn}
-              className="px-6 py-3 bg-gradient-to-r from-gray-500 to-gray-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all cursor-pointer"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              End Turn
-            </motion.button>
-          </div>
-
-          {/* Game Instructions */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
-            className="bg-white/80 backdrop-blur-lg rounded-xl p-6 border border-gray-200 mb-6"
-          >
-            <h3 className="text-xl font-bold mb-4 text-center text-gray-800">
-              How to Play
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-              <div className="p-3 bg-cyan-50 rounded-lg">
-                <h4 className="font-bold text-cyan-800 mb-2">
-                  🧠 Conscious (Runner)
-                </h4>
-                <ul className="space-y-1 text-gray-700">
-                  <li>• Install programs by clicking cards</li>
-                  <li>• Run on servers by clicking them</li>
-                  <li>• Need enough credits to break defenses</li>
-                  <li>• Win by reaching 7 access points</li>
-                </ul>
-              </div>
-              <div className="p-3 bg-purple-50 rounded-lg">
-                <h4 className="font-bold text-purple-800 mb-2">
-                  🌙 Subconscious (Corp)
-                </h4>
-                <ul className="space-y-1 text-gray-700">
-                  <li>• Select a server first</li>
-                  <li>• Install defenses on selected server</li>
-                  <li>• Protect your valuable data</li>
-                  <li>• Win by preventing access</li>
-                </ul>
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Spell Combinations Guide */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
-            className="bg-white/80 backdrop-blur-lg rounded-xl p-6 border border-gray-200"
-          >
-            <h3 className="text-xl font-bold mb-4 text-center text-gray-800">
-              Card Types
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-              <div>
-                <h4 className="font-bold text-cyan-800 mb-2">
-                  🧠 Conscious Programs
-                </h4>
-                {Object.entries(CONSCIOUS_CARDS).map(([key, card]) => (
-                  <div
-                    key={key}
-                    className="flex items-center gap-2 p-2 bg-cyan-50 rounded-lg mb-1"
-                  >
-                    <span>{card.icon}</span>
-                    <span className="font-semibold">{card.name}</span>
-                    <span className="text-cyan-600">
-                      ({card.cost}₵, {card.strength}💪)
-                    </span>
-                  </div>
-                ))}
-              </div>
-              <div>
-                <h4 className="font-bold text-purple-800 mb-2">
-                  🌙 Subconscious Defenses
-                </h4>
-                {Object.entries(SUBCONSCIOUS_CARDS).map(([key, card]) => (
-                  <div
-                    key={key}
-                    className="flex items-center gap-2 p-2 bg-purple-50 rounded-lg mb-1"
-                  >
-                    <span>{card.icon}</span>
-                    <span className="font-semibold">{card.name}</span>
-                    <span className="text-purple-600">
-                      ({card.cost}₵, {card.strength}🛡️)
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </motion.div>
-        </motion.div>
-      )}
     </div>
   );
 }
