@@ -203,7 +203,7 @@ export default function Home() {
           );
         }
       }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [user, isConnected, isAuthenticated]); // Added isConnected and isAuthenticated to dependencies
     const handleLogoutWithCleanup = () => {
       cleanupOnLogout(); // Clean up socket state first
