@@ -104,6 +104,10 @@ export const useAuth = () => {
       return;
     }
 
+    // Store credentials so SocketContext can authenticate after registration
+    sessionStorage.setItem("temp_username", userData.username);
+    sessionStorage.setItem("temp_password", userData.password);
+
     setIsLoading(true);
     socket.emit("register", userData);
   };

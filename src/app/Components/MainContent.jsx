@@ -10,6 +10,9 @@ import ZodiacCompatibility from "../Components/Features/ZodiacCompatibility";
 import Notes from "../Components/Features/Notes";
 import MysticElements from "../Components/Features/MysticElements";
 import Friends from "../Components/Features/Friends";
+import Discover from "../Components/Features/Discover";
+import Matches from "../Components/Features/Matches";
+import Meet from "../Components/Features/Meet";
 import UserProfile from "../Components/UserProfile";
 import ChatSidebar from "../Components/ChatSidebar";
 import { useSocket } from "../contexts/SocketContext";
@@ -271,6 +274,7 @@ export default function MainContent({ active, user, onLogin, setActive }) {
     startNewMatch,
     closeChat,
     reopenChat,
+    startFriendChat,
   } = useSocket();
   const [messageInput, setMessageInput] = useState("");
   const [usedQuotes, setUsedQuotes] = useState({});
@@ -3138,6 +3142,11 @@ export default function MainContent({ active, user, onLogin, setActive }) {
         )}
       </AnimatePresence>
 
+      {active === "meet" && (
+        <div className="flex-1 flex flex-col min-h-0">
+          <Meet user={user} onLogin={onLogin} />
+        </div>
+      )}
       {active === "zodiac" && (
         <div className="flex-1 flex flex-col min-h-0">
           <ZodiacCompatibility user={user} onLogin={onLogin} />
@@ -3913,6 +3922,29 @@ export default function MainContent({ active, user, onLogin, setActive }) {
           ) : (
             <AuthPrompt feature="Dreammaker" />
           )}
+        </div>
+      )}
+      {active === "discover" && (
+        <div className="flex-1 flex flex-col min-h-0">
+          <Discover
+            user={user}
+            onLogin={onLogin}
+            onNewMatch={() => setActive("matches")}
+          />
+        </div>
+      )}
+      {active === "matches" && (
+        <div className="flex-1 flex flex-col min-h-0">
+          <Matches
+            user={user}
+            onLogin={onLogin}
+            onStartChat={(match) => {
+              if (match?.partner_username) {
+                startFriendChat(match.partner_username);
+              }
+              setActive("chat");
+            }}
+          />
         </div>
       )}
       {active === "friends" && (

@@ -89,6 +89,49 @@ class DatabaseManager {
       )
     `;
 
+    // Create user profiles table (dating-specific data)
+    const createUserProfilesTable = `
+      CREATE TABLE IF NOT EXISTS user_profiles (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER UNIQUE NOT NULL,
+        bio TEXT DEFAULT '',
+        looking_for TEXT DEFAULT 'everyone',
+        profile_emoji TEXT DEFAULT '✨',
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users (id)
+      )
+    `;
+
+    // Create swipes table
+    const createSwipesTable = `
+      CREATE TABLE IF NOT EXISTS user_swipes (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        swiper_id INTEGER NOT NULL,
+        target_id INTEGER NOT NULL,
+        direction TEXT NOT NULL CHECK(direction IN ('like', 'pass')),
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (swiper_id) REFERENCES users (id),
+        FOREIGN KEY (target_id) REFERENCES users (id),
+        UNIQUE(swiper_id, target_id)
+      )
+    `;
+
+    // Create matches table
+    const createMatchesTable = `
+      CREATE TABLE IF NOT EXISTS dating_matches (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user1_id INTEGER NOT NULL,
+        user2_id INTEGER NOT NULL,
+        user1_username TEXT NOT NULL,
+        user2_username TEXT NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user1_id) REFERENCES users (id),
+        FOREIGN KEY (user2_id) REFERENCES users (id),
+        UNIQUE(user1_id, user2_id)
+      )
+    `;
+
     this.db.run(createUsersTable, (err) => {
       if (err) {
         console.error("Error creating users table:", err.message);
@@ -118,6 +161,30 @@ class DatabaseManager {
         console.error("Error creating friendships table:", err.message);
       } else {
         console.log("Friendships table initialized");
+      }
+    });
+
+    this.db.run(createUserProfilesTable, (err) => {
+      if (err) {
+        console.error("Error creating user_profiles table:", err.message);
+      } else {
+        console.log("User profiles table initialized");
+      }
+    });
+
+    this.db.run(createSwipesTable, (err) => {
+      if (err) {
+        console.error("Error creating user_swipes table:", err.message);
+      } else {
+        console.log("Swipes table initialized");
+      }
+    });
+
+    this.db.run(createMatchesTable, (err) => {
+      if (err) {
+        console.error("Error creating dating_matches table:", err.message);
+      } else {
+        console.log("Dating matches table initialized");
       }
     });
   }
@@ -168,7 +235,7 @@ class DatabaseManager {
                 createdAt: new Date().toISOString(),
               });
             }
-          }
+          },
         );
       });
     });
@@ -209,7 +276,7 @@ class DatabaseManager {
           // Update last login
           this.db.run(
             "UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?",
-            [row.id]
+            [row.id],
           );
 
           // Return user data
@@ -245,7 +312,7 @@ class DatabaseManager {
           } else {
             resolve(rows);
           }
-        }
+        },
       );
     });
   }
@@ -296,11 +363,10 @@ class DatabaseManager {
       console.log("User2 data:", JSON.stringify(user2Data, null, 2));
       console.log("Chat ID:", chatId);
 
-      // Check if chat already exists between these users
+      // Check if chat already exists between these users (including soft-deleted ones)
       const checkExisting = `
         SELECT * FROM persistent_chats 
         WHERE (user1_id = ? AND user2_id = ?) OR (user1_id = ? AND user2_id = ?)
-        AND deleted_by_user1 = FALSE AND deleted_by_user2 = FALSE
       `;
 
       this.db.get(
@@ -313,8 +379,36 @@ class DatabaseManager {
           }
 
           if (existingChat) {
-            // Chat already exists, return it
-            resolve(existingChat);
+            // Chat exists — restore it for the initiating user if they had deleted it,
+            // so it reappears in their sidebar after they start chatting again.
+            const isUser1 = existingChat.user1_id === user1Data.id;
+            const needsRestore = isUser1
+              ? existingChat.deleted_by_user1
+              : existingChat.deleted_by_user2;
+
+            if (!needsRestore) {
+              resolve(existingChat);
+              return;
+            }
+
+            const restoreCol = isUser1
+              ? "deleted_by_user1"
+              : "deleted_by_user2";
+            this.db.run(
+              `UPDATE persistent_chats SET ${restoreCol} = FALSE WHERE chat_id = ?`,
+              [existingChat.chat_id],
+              (updateErr) => {
+                if (updateErr) {
+                  reject(new Error("Failed to restore chat: " + updateErr.message));
+                } else {
+                  resolve({
+                    ...existingChat,
+                    deleted_by_user1: isUser1 ? 0 : existingChat.deleted_by_user1,
+                    deleted_by_user2: !isUser1 ? 0 : existingChat.deleted_by_user2,
+                  });
+                }
+              },
+            );
             return;
           }
 
@@ -336,7 +430,7 @@ class DatabaseManager {
             "Extracted signs - User1:",
             user1Sign,
             "User2:",
-            user2Sign
+            user2Sign,
           );
 
           this.db.run(
@@ -353,7 +447,7 @@ class DatabaseManager {
             function (err) {
               if (err) {
                 reject(
-                  new Error("Failed to create persistent chat: " + err.message)
+                  new Error("Failed to create persistent chat: " + err.message),
                 );
               } else {
                 resolve({
@@ -368,9 +462,9 @@ class DatabaseManager {
                   created_at: new Date().toISOString(),
                 });
               }
-            }
+            },
           );
-        }
+        },
       );
     });
   }
@@ -401,7 +495,7 @@ class DatabaseManager {
     senderId,
     senderUsername,
     messageText,
-    messageType = "user"
+    messageType = "user",
   ) {
     return new Promise((resolve, reject) => {
       const messageId = `msg_${Date.now()}_${Math.random()
@@ -436,7 +530,7 @@ class DatabaseManager {
               if (updateErr) {
                 console.error(
                   "Error updating chat timestamp:",
-                  updateErr.message
+                  updateErr.message,
                 );
               }
             });
@@ -452,12 +546,25 @@ class DatabaseManager {
               created_at: new Date().toISOString(),
             });
           }
-        }
+        },
       );
     });
   }
 
   // Get messages for a chat
+  async getPersistentChatById(chatId) {
+    return new Promise((resolve, reject) => {
+      this.db.get(
+        `SELECT * FROM persistent_chats WHERE chat_id = ?`,
+        [chatId],
+        (err, row) => {
+          if (err) reject(new Error("Error finding chat: " + err.message));
+          else resolve(row || null);
+        },
+      );
+    });
+  }
+
   async getChatMessages(chatId, limit = 50) {
     return new Promise((resolve, reject) => {
       const selectMessages = `
@@ -543,6 +650,164 @@ class DatabaseManager {
     });
   }
 
+  // ── Dating / Discover methods ──────────────────────────────────────────────
+
+  // Upsert extended profile (bio, lookingFor, profileEmoji)
+  async upsertUserProfile(userId, { bio, lookingFor, profileEmoji }) {
+    return new Promise((resolve, reject) => {
+      const query = `
+        INSERT INTO user_profiles (user_id, bio, looking_for, profile_emoji)
+        VALUES (?, ?, ?, ?)
+        ON CONFLICT(user_id) DO UPDATE SET
+          bio          = excluded.bio,
+          looking_for  = excluded.looking_for,
+          profile_emoji= excluded.profile_emoji,
+          updated_at   = CURRENT_TIMESTAMP
+      `;
+      this.db.run(
+        query,
+        [userId, bio || "", lookingFor || "everyone", profileEmoji || "✨"],
+        function (err) {
+          if (err)
+            reject(new Error("Failed to upsert profile: " + err.message));
+          else resolve({ userId, bio, lookingFor, profileEmoji });
+        },
+      );
+    });
+  }
+
+  // Get extended profile for a user
+  async getUserProfile(userId) {
+    return new Promise((resolve, reject) => {
+      this.db.get(
+        "SELECT * FROM user_profiles WHERE user_id = ?",
+        [userId],
+        (err, row) => {
+          if (err) reject(new Error("DB error: " + err.message));
+          else resolve(row || null);
+        },
+      );
+    });
+  }
+
+  // Get profiles for the discover feed (exclude self, already-swiped, and matches)
+  async getDiscoverProfiles(userId, limit = 20) {
+    return new Promise((resolve, reject) => {
+      const query = `
+        SELECT u.id, u.username, u.sun_sign, u.moon_sign, u.rising_sign,
+               u.birth_date, up.bio, up.looking_for, up.profile_emoji
+        FROM users u
+        LEFT JOIN user_profiles up ON up.user_id = u.id
+        WHERE u.id != ?
+          AND u.id NOT IN (
+            SELECT target_id FROM user_swipes WHERE swiper_id = ?
+          )
+        ORDER BY RANDOM()
+        LIMIT ?
+      `;
+      this.db.all(query, [userId, userId, limit], (err, rows) => {
+        if (err)
+          reject(new Error("Error fetching discover profiles: " + err.message));
+        else resolve(rows);
+      });
+    });
+  }
+
+  // Record a swipe; returns { isMatch: true/false, matchData } if it's a mutual like
+  async recordSwipe(swiperId, targetId, direction) {
+    return new Promise((resolve, reject) => {
+      const insert = `
+        INSERT OR REPLACE INTO user_swipes (swiper_id, target_id, direction)
+        VALUES (?, ?, ?)
+      `;
+      this.db.run(insert, [swiperId, targetId, direction], (err) => {
+        if (err) {
+          reject(new Error("Failed to record swipe: " + err.message));
+          return;
+        }
+
+        if (direction !== "like") {
+          resolve({ isMatch: false });
+          return;
+        }
+
+        // Check if the other user already liked back
+        this.db.get(
+          "SELECT * FROM user_swipes WHERE swiper_id = ? AND target_id = ? AND direction = 'like'",
+          [targetId, swiperId],
+          (err, row) => {
+            if (err) {
+              resolve({ isMatch: false });
+              return;
+            }
+
+            if (!row) {
+              resolve({ isMatch: false });
+              return;
+            }
+
+            // It's a match! Record in dating_matches (ensure lower id is user1)
+            const [u1, u2] =
+              swiperId < targetId ? [swiperId, targetId] : [targetId, swiperId];
+            const getUsernames = `SELECT id, username FROM users WHERE id IN (?, ?)`;
+            this.db.all(getUsernames, [u1, u2], (err, users) => {
+              if (err || !users || users.length < 2) {
+                resolve({ isMatch: false });
+                return;
+              }
+              const u1Data = users.find((u) => u.id === u1);
+              const u2Data = users.find((u) => u.id === u2);
+
+              this.db.run(
+                `INSERT OR IGNORE INTO dating_matches (user1_id, user2_id, user1_username, user2_username) VALUES (?, ?, ?, ?)`,
+                [u1, u2, u1Data.username, u2Data.username],
+                (err) => {
+                  resolve({
+                    isMatch: true,
+                    matchData: {
+                      user1Id: u1,
+                      user2Id: u2,
+                      user1Username: u1Data.username,
+                      user2Username: u2Data.username,
+                    },
+                  });
+                },
+              );
+            });
+          },
+        );
+      });
+    });
+  }
+
+  // Get all dating matches for a user (with extended profile info)
+  async getDatingMatches(userId) {
+    return new Promise((resolve, reject) => {
+      const query = `
+        SELECT
+          dm.id AS match_id, dm.created_at AS matched_at,
+          CASE WHEN dm.user1_id = ? THEN dm.user2_id ELSE dm.user1_id END AS partner_id,
+          CASE WHEN dm.user1_id = ? THEN dm.user2_username ELSE dm.user1_username END AS partner_username,
+          u.sun_sign, u.moon_sign, u.rising_sign, u.birth_date,
+          up.bio, up.looking_for, up.profile_emoji
+        FROM dating_matches dm
+        JOIN users u ON u.id = (CASE WHEN dm.user1_id = ? THEN dm.user2_id ELSE dm.user1_id END)
+        LEFT JOIN user_profiles up ON up.user_id = u.id
+        WHERE dm.user1_id = ? OR dm.user2_id = ?
+        ORDER BY dm.created_at DESC
+      `;
+      this.db.all(
+        query,
+        [userId, userId, userId, userId, userId],
+        (err, rows) => {
+          if (err)
+            reject(new Error("Error fetching dating matches: " + err.message));
+          else resolve(rows);
+        },
+      );
+    });
+  }
+
   // Friends methods
   async sendFriendInvitation(fromUserId, toUsername) {
     return new Promise((resolve, reject) => {
@@ -616,8 +881,8 @@ class DatabaseManager {
                   if (err) {
                     reject(
                       new Error(
-                        "Failed to send friend invitation: " + err.message
-                      )
+                        "Failed to send friend invitation: " + err.message,
+                      ),
                     );
                   } else {
                     resolve({
@@ -628,10 +893,10 @@ class DatabaseManager {
                       toSign: toUser.sun_sign,
                     });
                   }
-                }
+                },
               );
             });
-          }
+          },
         );
       });
     });
@@ -689,8 +954,8 @@ class DatabaseManager {
               if (err) {
                 reject(
                   new Error(
-                    "Error fetching pending invitations: " + err.message
-                  )
+                    "Error fetching pending invitations: " + err.message,
+                  ),
                 );
                 return;
               }
@@ -698,7 +963,9 @@ class DatabaseManager {
               this.db.all(pendingSentQuery, [userId], (err, pendingSent) => {
                 if (err) {
                   reject(
-                    new Error("Error fetching sent invitations: " + err.message)
+                    new Error(
+                      "Error fetching sent invitations: " + err.message,
+                    ),
                   );
                   return;
                 }
@@ -719,9 +986,9 @@ class DatabaseManager {
                   })),
                 });
               });
-            }
+            },
           );
-        }
+        },
       );
     });
   }
@@ -760,7 +1027,7 @@ class DatabaseManager {
           this.db.run(updateQuery, [friendship.id], (err) => {
             if (err) {
               reject(
-                new Error("Failed to accept friend invitation: " + err.message)
+                new Error("Failed to accept friend invitation: " + err.message),
               );
             } else {
               resolve({
@@ -772,7 +1039,7 @@ class DatabaseManager {
               });
             }
           });
-        }
+        },
       );
     });
   }
@@ -788,7 +1055,7 @@ class DatabaseManager {
       this.db.run(deleteQuery, [userId, fromUsername], function (err) {
         if (err) {
           reject(
-            new Error("Failed to decline friend invitation: " + err.message)
+            new Error("Failed to decline friend invitation: " + err.message),
           );
         } else if (this.changes === 0) {
           reject(new Error("Friend invitation not found"));

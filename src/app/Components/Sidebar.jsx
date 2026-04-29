@@ -1,5 +1,8 @@
 const SIDEBAR_ITEMS = [
+  { id: "meet", label: "Meet", icon: "🌐" },
   { id: "chat", label: "Chat", icon: "💬" },
+  { id: "discover", label: "Discover", icon: "🔥" },
+  { id: "matches", label: "Matches", icon: "💕" },
   { id: "zodiac", label: "Zodiac Compatibility", icon: "♈" },
   { id: "friends", label: "Friends", icon: "👥" },
   { id: "notes", label: "Notes", icon: "📝" },

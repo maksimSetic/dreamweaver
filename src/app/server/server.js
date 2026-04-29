@@ -48,6 +48,10 @@ let userSockets = new Map(); // userId -> socketId
 let disconnectedUsers = new Map(); // userId -> {matchId, lastSeen, userInfo}
 let registeredUsers = new Map(); // socketId -> userData (for registered users)
 
+// ── Meet (Omegle-style video chat) state ──────────────────────────────────────
+let meetQueue = []; // { socketId, name, sign }
+let meetMatches = new Map(); // matchId -> { socket1Id, socket2Id }
+
 io.on("connection", (socket) => {
   console.log("User connected:", socket.id);
 
@@ -220,7 +224,7 @@ io.on("connection", (socket) => {
   });
 
   // Handle sending messages
-  socket.on("send-message", (data) => {
+  socket.on("send-message", async (data) => {
     console.log("Received message data:", data);
     console.log("Socket userId:", socket.userId);
 
@@ -302,9 +306,70 @@ io.on("connection", (socket) => {
       // Echo back to sender for confirmation
       socket.emit("message-sent", messageData);
     } else {
-      console.log("Match not found for matchId:", actualMatchId);
-      console.log("Active matches:", Array.from(activeMatches.keys()));
-      socket.emit("message-error", { message: "Match not found" });
+      // Not in activeMatches — check if it's a persistent (friend) chat
+      if (!socket.isRegistered) {
+        socket.emit("message-error", { message: "Match not found" });
+        return;
+      }
+
+      try {
+        const chat = await db.getPersistentChatById(actualMatchId);
+        if (!chat) {
+          console.log("Match not found for matchId:", actualMatchId);
+          socket.emit("message-error", { message: "Match not found" });
+          return;
+        }
+
+        const senderData = registeredUsers.get(socket.id);
+        if (!senderData) {
+          socket.emit("message-error", { message: "Sender not found" });
+          return;
+        }
+
+        if (
+          chat.user1_id !== senderData.id &&
+          chat.user2_id !== senderData.id
+        ) {
+          socket.emit("message-error", {
+            message: "You are not part of this chat",
+          });
+          return;
+        }
+
+        // Save the message to the database
+        const savedMessage = await db.saveMessage(
+          actualMatchId,
+          senderData.id,
+          senderData.username,
+          message,
+        );
+
+        const messageData = {
+          id: savedMessage.message_id,
+          senderId: senderData.id,
+          sender: senderData.username,
+          message: message,
+          timestamp: new Date().toISOString(),
+        };
+
+        // Deliver to partner if they're online
+        const partnerId =
+          chat.user1_id === senderData.id ? chat.user2_id : chat.user1_id;
+        const partnerSocketEntry = [...registeredUsers.entries()].find(
+          ([, u]) => u.id === partnerId,
+        );
+        if (partnerSocketEntry) {
+          const [partnerSocketId] = partnerSocketEntry;
+          io.to(partnerSocketId).emit("receive-message", messageData);
+          console.log("Persistent chat message delivered to partner");
+        }
+
+        socket.emit("message-sent", messageData);
+        console.log("Persistent chat message saved and confirmed");
+      } catch (error) {
+        console.error("Error handling persistent chat message:", error.message);
+        socket.emit("message-error", { message: error.message });
+      }
     }
   });
 
@@ -784,9 +849,9 @@ io.on("connection", (socket) => {
       );
 
       socket.emit("friend-chat-started", {
-        chatId: chat.id,
-        chatName: chat.name,
+        chatId: chat.chat_id,
         friendUsername: friendUsername,
+        friendSign: friendUser.sun_sign,
       });
 
       // Notify friend if they're online
@@ -812,12 +877,240 @@ io.on("connection", (socket) => {
     }
   });
 
+  // ── Dating / Discover events ───────────────────────────────────────────────
+
+  // Get profiles for the discover feed
+  socket.on("get-discover-profiles", async () => {
+    if (!socket.isRegistered) {
+      socket.emit("discover-profiles-error", { message: "Not authenticated" });
+      return;
+    }
+    try {
+      const profiles = await db.getDiscoverProfiles(socket.userId, 30);
+      socket.emit("discover-profiles", profiles);
+    } catch (err) {
+      socket.emit("discover-profiles-error", { message: err.message });
+    }
+  });
+
+  // Record a swipe (like / pass)
+  socket.on("swipe", async (data) => {
+    const { targetId, direction } = data;
+    if (!socket.isRegistered) {
+      socket.emit("swipe-error", { message: "Not authenticated" });
+      return;
+    }
+    if (!["like", "pass"].includes(direction)) {
+      socket.emit("swipe-error", { message: "Invalid direction" });
+      return;
+    }
+    try {
+      const result = await db.recordSwipe(socket.userId, targetId, direction);
+      socket.emit("swipe-recorded", {
+        targetId,
+        direction,
+        isMatch: result.isMatch,
+      });
+
+      if (result.isMatch) {
+        const { matchData } = result;
+        // Notify both users about the new dating match
+        const notifyPayload = (partnerId, partnerUsername) => ({
+          matchId: `dm_${matchData.user1Id}_${matchData.user2Id}`,
+          partnerUsername,
+          partnerId,
+        });
+
+        const currentUser = registeredUsers.get(socket.id);
+        const partnerIsCurrentUser = matchData.user1Id === socket.userId;
+        const partnerId = partnerIsCurrentUser
+          ? matchData.user2Id
+          : matchData.user1Id;
+        const partnerUsername = partnerIsCurrentUser
+          ? matchData.user2Username
+          : matchData.user1Username;
+        const myUsername = currentUser ? currentUser.username : "";
+
+        socket.emit("dating-match", notifyPayload(partnerId, partnerUsername));
+
+        // Notify partner if online (find by userId stored in registeredUsers)
+        const partnerEntry = [...registeredUsers.entries()].find(
+          ([, u]) => u.id === partnerId,
+        );
+        if (partnerEntry) {
+          const [partnerSocketId] = partnerEntry;
+          io.to(partnerSocketId).emit(
+            "dating-match",
+            notifyPayload(socket.userId, myUsername),
+          );
+        }
+      }
+    } catch (err) {
+      socket.emit("swipe-error", { message: err.message });
+    }
+  });
+
+  // Get all dating matches for the current user
+  socket.on("get-dating-matches", async () => {
+    if (!socket.isRegistered) {
+      socket.emit("dating-matches-error", { message: "Not authenticated" });
+      return;
+    }
+    try {
+      const matches = await db.getDatingMatches(socket.userId);
+      socket.emit("dating-matches", matches);
+    } catch (err) {
+      socket.emit("dating-matches-error", { message: err.message });
+    }
+  });
+
+  // Update dating profile (bio, lookingFor, profileEmoji)
+  socket.on("update-dating-profile", async (data) => {
+    if (!socket.isRegistered) {
+      socket.emit("update-dating-profile-error", {
+        message: "Not authenticated",
+      });
+      return;
+    }
+    try {
+      const result = await db.upsertUserProfile(socket.userId, data);
+      socket.emit("dating-profile-updated", result);
+    } catch (err) {
+      socket.emit("update-dating-profile-error", { message: err.message });
+    }
+  });
+
+  // Get dating profile for current user
+  socket.on("get-dating-profile", async () => {
+    if (!socket.isRegistered) {
+      socket.emit("get-dating-profile-error", { message: "Not authenticated" });
+      return;
+    }
+    try {
+      const profile = await db.getUserProfile(socket.userId);
+      socket.emit("dating-profile", profile);
+    } catch (err) {
+      socket.emit("get-dating-profile-error", { message: err.message });
+    }
+  });
+
+  // ── End Dating events ──────────────────────────────────────────────────────
+
+  // ── Meet events (Omegle-style video chat) ────────────────────────────────
+
+  socket.on("meet-join-queue", (userData) => {
+    // Remove any stale entry for this socket
+    meetQueue = meetQueue.filter((u) => u.socketId !== socket.id);
+    // Clean up any existing meet match for this socket
+    for (const [mid, m] of meetMatches.entries()) {
+      if (m.socket1Id === socket.id || m.socket2Id === socket.id) {
+        const partnerId = m.socket1Id === socket.id ? m.socket2Id : m.socket1Id;
+        io.to(partnerId).emit("meet-partner-left");
+        meetMatches.delete(mid);
+      }
+    }
+
+    const entry = {
+      socketId: socket.id,
+      name: userData.name || "Stranger",
+      sign: userData.sign || null,
+    };
+
+    // Try to pair immediately
+    if (meetQueue.length > 0) {
+      const partner = meetQueue.shift();
+      const matchId = generateId();
+      meetMatches.set(matchId, {
+        socket1Id: partner.socketId,
+        socket2Id: socket.id,
+      });
+
+      // socket1 (partner) is the WebRTC initiator
+      io.to(partner.socketId).emit("meet-matched", {
+        matchId,
+        isInitiator: true,
+        partner: { name: entry.name, sign: entry.sign },
+      });
+      io.to(socket.id).emit("meet-matched", {
+        matchId,
+        isInitiator: false,
+        partner: { name: partner.name, sign: partner.sign },
+      });
+      console.log(`Meet match: ${partner.name} <-> ${entry.name} [${matchId}]`);
+    } else {
+      meetQueue.push(entry);
+      console.log(
+        `Meet queue: ${entry.name} waiting (queue length ${meetQueue.length})`,
+      );
+    }
+  });
+
+  socket.on("meet-cancel-queue", () => {
+    meetQueue = meetQueue.filter((u) => u.socketId !== socket.id);
+  });
+
+  // WebRTC signaling relay
+  socket.on("meet-webrtc-offer", ({ matchId, offer }) => {
+    const match = meetMatches.get(matchId);
+    if (!match) return;
+    const partnerId =
+      match.socket1Id === socket.id ? match.socket2Id : match.socket1Id;
+    io.to(partnerId).emit("meet-webrtc-offer", { matchId, offer });
+  });
+
+  socket.on("meet-webrtc-answer", ({ matchId, answer }) => {
+    const match = meetMatches.get(matchId);
+    if (!match) return;
+    const partnerId =
+      match.socket1Id === socket.id ? match.socket2Id : match.socket1Id;
+    io.to(partnerId).emit("meet-webrtc-answer", { matchId, answer });
+  });
+
+  socket.on("meet-webrtc-ice-candidate", ({ matchId, candidate }) => {
+    const match = meetMatches.get(matchId);
+    if (!match) return;
+    const partnerId =
+      match.socket1Id === socket.id ? match.socket2Id : match.socket1Id;
+    io.to(partnerId).emit("meet-webrtc-ice-candidate", { matchId, candidate });
+  });
+
+  // Text chat inside a meet session
+  socket.on("meet-message", ({ matchId, text }) => {
+    const match = meetMatches.get(matchId);
+    if (!match) return;
+    const partnerId =
+      match.socket1Id === socket.id ? match.socket2Id : match.socket1Id;
+    io.to(partnerId).emit("meet-message", { text });
+  });
+
+  // Explicit leave
+  socket.on("meet-leave", ({ matchId }) => {
+    const match = meetMatches.get(matchId);
+    if (!match) return;
+    const partnerId =
+      match.socket1Id === socket.id ? match.socket2Id : match.socket1Id;
+    io.to(partnerId).emit("meet-partner-left");
+    meetMatches.delete(matchId);
+  });
+
+  // ── End Meet events ───────────────────────────────────────────────────────
+
   // Handle disconnection
   socket.on("disconnect", () => {
     console.log("User disconnected:", socket.id);
 
     // Remove from queue if waiting
     userQueue = userQueue.filter((user) => user.socketId !== socket.id);
+
+    // Clean up meet queue / matches
+    meetQueue = meetQueue.filter((u) => u.socketId !== socket.id);
+    for (const [mid, m] of meetMatches.entries()) {
+      if (m.socket1Id === socket.id || m.socket2Id === socket.id) {
+        const partnerId = m.socket1Id === socket.id ? m.socket2Id : m.socket1Id;
+        io.to(partnerId).emit("meet-partner-left");
+        meetMatches.delete(mid);
+      }
+    }
 
     // Remove from registered users map
     registeredUsers.delete(socket.id);

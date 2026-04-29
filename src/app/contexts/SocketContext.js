@@ -127,6 +127,10 @@ export const SocketProvider = ({ children, onMatchFound, user }) => {
   // No need for additional useEffect that forces navigation on state changes
 
   useEffect(() => {
+    // Tracks a friend chat that needs to be opened once persistent-chats refreshes.
+    // Local to this closure so both handlers share the same reference without a React ref.
+    let pendingFriendChatToOpen = null;
+
     // Initialize socket connection with auto-reconnection
     const SOCKET_URL =
       process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:3001";
@@ -406,6 +410,32 @@ export const SocketProvider = ({ children, onMatchFound, user }) => {
     socketInstance.on("persistent-chats", (chats) => {
       console.log("Received persistent chats:", chats);
       setPersistentChats(chats);
+
+      // If a friend chat was just created, open it now that we have the full list
+      if (pendingFriendChatToOpen) {
+        const pending = pendingFriendChatToOpen;
+        pendingFriendChatToOpen = null;
+        const chatToOpen = chats.find((c) => c.chat_id === pending.chat_id);
+        if (chatToOpen) {
+          setCurrentChatId(chatToOpen.chat_id);
+          setIsMatched(true);
+          setChatClosed(false);
+          setPartnerDisconnected(false);
+          setMatchData({
+            matchId: chatToOpen.chat_id,
+            isPersistent: true,
+            partner: {
+              name: pending.friendUsername,
+              sign: pending.friendSign || "Unknown",
+            },
+          });
+          setMessages([]);
+          // Load existing messages for this chat
+          socketInstance.emit("load-chat-messages", {
+            chatId: chatToOpen.chat_id,
+          });
+        }
+      }
     });
 
     socketInstance.on("persistent-chats-error", (error) => {
@@ -503,12 +533,14 @@ export const SocketProvider = ({ children, onMatchFound, user }) => {
 
     socketInstance.on("friend-chat-started", (data) => {
       console.log("Friend chat started:", data);
-      // Reload persistent chats to show the new friend chat
-      setTimeout(() => {
-        console.log("Friend chat started - reloading persistent chats");
-        loadPersistentChats();
-      }, 500);
-      setCurrentChatId(data.chatId);
+      // Store info needed to open the chat once the list refreshes
+      pendingFriendChatToOpen = {
+        chat_id: data.chatId,
+        friendUsername: data.friendUsername,
+        friendSign: data.friendSign,
+      };
+      // Bypass the throttle and request a fresh chat list immediately
+      socketInstance.emit("get-persistent-chats");
     });
 
     socketInstance.on("friend-chat-invitation", (data) => {
