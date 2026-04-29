@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import friendsAPI from "../../services/friendsAPI";
+import MeetButton from "../MeetButton";
 
 const Friends = ({ user, onLogin }) => {
   const [friends, setFriends] = useState([]);
@@ -463,10 +464,11 @@ const Friends = ({ user, onLogin }) => {
                               )}
                             </div>
                           </div>
-                          <div className="flex space-x-2">
+                          <div className="flex space-x-2 flex-wrap gap-y-1">
                             <button className="bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 px-3 py-1 rounded-md text-sm transition-colors">
                               Chat
                             </button>
+                            <MeetButton username={friend.username} />
                             <button
                               onClick={() => removeFriend(friend.id)}
                               className="bg-red-500/20 hover:bg-red-500/30 text-red-300 px-3 py-1 rounded-md text-sm transition-colors"

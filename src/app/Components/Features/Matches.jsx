@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSocket } from "../../contexts/SocketContext";
+import AddFriendButton from "../AddFriendButton";
+import MeetButton from "../MeetButton";
 
 const zodiacSymbols = {
   Aries: "♈",
@@ -116,13 +118,17 @@ function MatchCard({ match, mySun, onStartChat }) {
         )}
       </div>
 
-      {/* Chat button */}
-      <button
-        onClick={() => onStartChat(match)}
-        className="w-full bg-gradient-to-r from-pink-600/80 to-purple-600/80 hover:from-pink-500 hover:to-purple-500 border border-pink-500/30 text-white text-sm font-semibold py-2.5 rounded-xl transition-all duration-200 group-hover:shadow-lg group-hover:shadow-pink-900/30"
-      >
-        💬 Send a Message
-      </button>
+      {/* Action buttons */}
+      <div className="flex gap-2 flex-wrap">
+        <button
+          onClick={() => onStartChat(match)}
+          className="flex-1 bg-gradient-to-r from-pink-600/80 to-purple-600/80 hover:from-pink-500 hover:to-purple-500 border border-pink-500/30 text-white text-sm font-semibold py-2.5 rounded-xl transition-all duration-200 group-hover:shadow-lg group-hover:shadow-pink-900/30"
+        >
+          💬 Send a Message
+        </button>
+        <AddFriendButton username={match.partner_username} size="md" />
+        <MeetButton username={match.partner_username} size="md" />
+      </div>
     </motion.div>
   );
 }

@@ -51,6 +51,7 @@ let registeredUsers = new Map(); // socketId -> userData (for registered users)
 // ── Meet (Omegle-style video chat) state ──────────────────────────────────────
 let meetQueue = []; // { socketId, name, sign }
 let meetMatches = new Map(); // matchId -> { socket1Id, socket2Id }
+let meetDirectInvites = new Map(); // inviteId -> { fromSocketId, fromName, fromSign }
 
 io.on("connection", (socket) => {
   console.log("User connected:", socket.id);
@@ -1093,6 +1094,78 @@ io.on("connection", (socket) => {
     meetMatches.delete(matchId);
   });
 
+  // Direct (person-to-person) meet invite
+  socket.on("meet-direct-invite", ({ toUsername }) => {
+    if (!socket.isRegistered) return;
+    const targetEntry = [...registeredUsers.entries()].find(
+      ([, u]) => u.username === toUsername,
+    );
+    if (!targetEntry) {
+      socket.emit("meet-invite-error", {
+        message: "User is not currently online",
+      });
+      return;
+    }
+    const [targetSocketId] = targetEntry;
+    const inviteId = generateId();
+    const senderData = registeredUsers.get(socket.id);
+    meetDirectInvites.set(inviteId, {
+      fromSocketId: socket.id,
+      fromName: senderData?.username || "Unknown",
+      fromSign: senderData?.zodiacChart?.sun || null,
+    });
+    io.to(targetSocketId).emit("meet-direct-invite-received", {
+      inviteId,
+      fromUsername: senderData?.username || "Unknown",
+      fromSign: senderData?.zodiacChart?.sun || null,
+    });
+    console.log(
+      `Meet invite: ${senderData?.username} → ${toUsername} [${inviteId}]`,
+    );
+  });
+
+  socket.on("meet-direct-response", ({ inviteId, accepted }) => {
+    const invite = meetDirectInvites.get(inviteId);
+    if (!invite) return;
+    meetDirectInvites.delete(inviteId);
+
+    if (!accepted) {
+      const responderData = registeredUsers.get(socket.id);
+      io.to(invite.fromSocketId).emit("meet-invite-declined", {
+        byUsername: responderData?.username || "Unknown",
+      });
+      return;
+    }
+
+    // Both accepted – create a direct meet match and start WebRTC
+    const matchId = generateId();
+    meetMatches.set(matchId, {
+      socket1Id: invite.fromSocketId, // sender = initiator
+      socket2Id: socket.id,
+    });
+    const senderData = registeredUsers.get(invite.fromSocketId);
+    const responderData = registeredUsers.get(socket.id);
+    io.to(invite.fromSocketId).emit("meet-direct-start", {
+      matchId,
+      isInitiator: true,
+      partner: {
+        name: responderData?.username || "Friend",
+        sign: responderData?.zodiacChart?.sun || null,
+      },
+    });
+    io.to(socket.id).emit("meet-direct-start", {
+      matchId,
+      isInitiator: false,
+      partner: {
+        name: senderData?.username || "Friend",
+        sign: senderData?.zodiacChart?.sun || null,
+      },
+    });
+    console.log(
+      `Direct meet started: ${senderData?.username} <-> ${responderData?.username} [${matchId}]`,
+    );
+  });
+
   // ── End Meet events ───────────────────────────────────────────────────────
 
   // Handle disconnection
@@ -1102,13 +1175,18 @@ io.on("connection", (socket) => {
     // Remove from queue if waiting
     userQueue = userQueue.filter((user) => user.socketId !== socket.id);
 
-    // Clean up meet queue / matches
+    // Clean up meet queue / matches / direct invites
     meetQueue = meetQueue.filter((u) => u.socketId !== socket.id);
     for (const [mid, m] of meetMatches.entries()) {
       if (m.socket1Id === socket.id || m.socket2Id === socket.id) {
         const partnerId = m.socket1Id === socket.id ? m.socket2Id : m.socket1Id;
         io.to(partnerId).emit("meet-partner-left");
         meetMatches.delete(mid);
+      }
+    }
+    for (const [inviteId, invite] of meetDirectInvites.entries()) {
+      if (invite.fromSocketId === socket.id) {
+        meetDirectInvites.delete(inviteId);
       }
     }
 

@@ -13,6 +13,8 @@ import Friends from "../Components/Features/Friends";
 import Discover from "../Components/Features/Discover";
 import Matches from "../Components/Features/Matches";
 import Meet from "../Components/Features/Meet";
+import AddFriendButton from "../Components/AddFriendButton";
+import MeetButton from "../Components/MeetButton";
 import UserProfile from "../Components/UserProfile";
 import ChatSidebar from "../Components/ChatSidebar";
 import { useSocket } from "../contexts/SocketContext";
@@ -275,6 +277,10 @@ export default function MainContent({ active, user, onLogin, setActive }) {
     closeChat,
     reopenChat,
     startFriendChat,
+    incomingMeetInvite,
+    directMeetSession,
+    acceptMeetInvite,
+    declineMeetInvite,
   } = useSocket();
   const [messageInput, setMessageInput] = useState("");
   const [usedQuotes, setUsedQuotes] = useState({});
@@ -324,6 +330,13 @@ export default function MainContent({ active, user, onLogin, setActive }) {
       // Ignore parse errors
     }
   }, []);
+
+  // Navigate to Meet tab when a direct meet session starts
+  useEffect(() => {
+    if (directMeetSession) {
+      setActive("meet");
+    }
+  }, [directMeetSession, setActive]);
 
   // Get characters for the current user's zodiac sign
   const allCharacters = getAllCharacters(user?.zodiacChart?.sun) || [];
@@ -3108,6 +3121,65 @@ export default function MainContent({ active, user, onLogin, setActive }) {
     <main
       className={`flex-1 flex flex-col ${active === "chat" ? "overflow-hidden" : "overflow-auto bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900"}`}
     >
+      {/* Incoming Direct Meet Invite modal */}
+      <AnimatePresence>
+        {incomingMeetInvite && (
+          <motion.div
+            key="meet-invite-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm px-4"
+          >
+            <motion.div
+              initial={{ scale: 0.8, y: 30 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.8, y: 30 }}
+              transition={{ type: "spring", stiffness: 340, damping: 24 }}
+              className="bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 border border-blue-400/40 rounded-3xl p-7 max-w-sm w-full shadow-2xl shadow-blue-900/60 text-center"
+            >
+              <motion.div
+                animate={{ rotate: [0, -10, 10, -6, 0] }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+                className="text-6xl mb-4"
+              >
+                🌐
+              </motion.div>
+              <h2 className="text-xl font-extrabold text-white mb-1">
+                Video Call Invite
+              </h2>
+              <p className="text-purple-300 text-sm mb-5">
+                <span className="text-white font-semibold">
+                  {incomingMeetInvite.fromUsername}
+                </span>
+                {incomingMeetInvite.fromSign && (
+                  <span className="text-purple-400 ml-1 text-xs">
+                    ({incomingMeetInvite.fromSign})
+                  </span>
+                )}{" "}
+                wants to video call you!
+              </p>
+              <div className="flex gap-3 justify-center">
+                <motion.button
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => acceptMeetInvite(incomingMeetInvite.inviteId)}
+                  className="flex-1 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-400 hover:to-emerald-400 text-white font-bold py-3 rounded-2xl transition-all duration-200 shadow-lg shadow-green-900/40"
+                >
+                  ✅ Accept
+                </motion.button>
+                <motion.button
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => declineMeetInvite(incomingMeetInvite.inviteId)}
+                  className="flex-1 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold py-3 rounded-2xl transition-all duration-200"
+                >
+                  ✕ Decline
+                </motion.button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Active Chat Notification */}
       <AnimatePresence>
         {showChatNotification && (
@@ -3241,8 +3313,18 @@ export default function MainContent({ active, user, onLogin, setActive }) {
                               🔍 Back to Matching
                             </button>
                           ) : (
-                            <div className="text-green-400 text-sm">
-                              🟢 Connected
+                            <div className="flex flex-col items-center gap-2">
+                              <div className="text-green-400 text-sm">
+                                🟢 Connected
+                              </div>
+                              <div className="flex gap-2 flex-wrap justify-center">
+                                <AddFriendButton
+                                  username={matchData?.partner?.name}
+                                />
+                                <MeetButton
+                                  username={matchData?.partner?.name}
+                                />
+                              </div>
                             </div>
                           )}
                         </motion.div>

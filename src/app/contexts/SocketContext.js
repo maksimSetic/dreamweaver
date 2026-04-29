@@ -50,6 +50,11 @@ export const SocketProvider = ({ children, onMatchFound, user }) => {
   const [pendingInvitations, setPendingInvitations] = useState([]);
   const [sentInvitations, setSentInvitations] = useState([]);
 
+  // Direct Meet invite state
+  const [incomingMeetInvite, setIncomingMeetInvite] = useState(null); // { inviteId, fromUsername, fromSign }
+  const [directMeetSession, setDirectMeetSession] = useState(null); // { matchId, isInitiator, partner }
+  const [pendingMeetInvites, setPendingMeetInvites] = useState([]); // [{ toUsername }]
+
   // Chat requests state
   const [chatRequests, setChatRequests] = useState([]);
   const [sentChatRequests, setSentChatRequests] = useState([]);
@@ -626,6 +631,38 @@ export const SocketProvider = ({ children, onMatchFound, user }) => {
       console.error("Friends data error:", error.message);
     });
 
+    // Direct Meet invite listeners
+    socketInstance.on("meet-direct-invite-received", (data) => {
+      console.log("Direct meet invite received:", data);
+      setIncomingMeetInvite(data);
+    });
+
+    socketInstance.on("meet-direct-start", (data) => {
+      console.log("Direct meet starting:", data);
+      setDirectMeetSession(data);
+      setIncomingMeetInvite(null);
+      // Clear from pending (sender side)
+      setPendingMeetInvites((prev) =>
+        prev.filter(
+          (i) =>
+            i.toUsername?.toLowerCase() !== data.partner?.name?.toLowerCase(),
+        ),
+      );
+    });
+
+    socketInstance.on("meet-invite-declined", (data) => {
+      console.log("Meet invite declined by:", data.byUsername);
+      setPendingMeetInvites((prev) =>
+        prev.filter(
+          (i) => i.toUsername?.toLowerCase() !== data.byUsername?.toLowerCase(),
+        ),
+      );
+    });
+
+    socketInstance.on("meet-invite-error", (error) => {
+      console.warn("Meet invite error:", error.message);
+    });
+
     setSocket(socketInstance);
 
     return () => {
@@ -1027,6 +1064,35 @@ export const SocketProvider = ({ children, onMatchFound, user }) => {
     }
   };
 
+  // Direct Meet invite functions
+  const sendMeetInvite = (toUsername) => {
+    if (socket && toUsername) {
+      socket.emit("meet-direct-invite", { toUsername });
+      setPendingMeetInvites((prev) => {
+        if (prev.some((i) => i.toUsername === toUsername)) return prev;
+        return [...prev, { toUsername }];
+      });
+    }
+  };
+
+  const acceptMeetInvite = (inviteId) => {
+    if (socket) {
+      socket.emit("meet-direct-response", { inviteId, accepted: true });
+      setIncomingMeetInvite(null);
+    }
+  };
+
+  const declineMeetInvite = (inviteId) => {
+    if (socket) {
+      socket.emit("meet-direct-response", { inviteId, accepted: false });
+      setIncomingMeetInvite(null);
+    }
+  };
+
+  const clearDirectMeetSession = () => {
+    setDirectMeetSession(null);
+  };
+
   const acceptFriendInvitation = (fromUsername) => {
     if (socket) {
       socket.emit("accept-friend-invitation", { fromUsername });
@@ -1194,6 +1260,14 @@ export const SocketProvider = ({ children, onMatchFound, user }) => {
     acceptFriendInvitation,
     declineFriendInvitation,
     startFriendChat,
+    // Direct Meet invite
+    incomingMeetInvite,
+    directMeetSession,
+    pendingMeetInvites,
+    sendMeetInvite,
+    acceptMeetInvite,
+    declineMeetInvite,
+    clearDirectMeetSession,
     // Chat request functions
     chatRequests,
     sentChatRequests,

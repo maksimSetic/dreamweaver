@@ -6,6 +6,7 @@ import {
   useTransform,
 } from "framer-motion";
 import { useSocket } from "../../contexts/SocketContext";
+import AddFriendButton from "../AddFriendButton";
 
 const zodiacSymbols = {
   Aries: "♈",
@@ -211,6 +212,13 @@ function SwipeCard({ profile, mySun, onSwipe, isTop }) {
               <span className="text-xs bg-purple-600/40 border border-purple-500/30 text-purple-200 px-2 py-0.5 rounded-full capitalize">
                 {profile.looking_for}
               </span>
+            </div>
+          )}
+
+          {/* Add Friend – only shown on the top card */}
+          {isTop && (
+            <div className="mt-4">
+              <AddFriendButton username={profile.username} />
             </div>
           )}
         </div>
