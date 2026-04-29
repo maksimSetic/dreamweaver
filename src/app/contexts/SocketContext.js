@@ -661,6 +661,14 @@ export const SocketProvider = ({ children, onMatchFound, user }) => {
 
     socketInstance.on("meet-invite-error", (error) => {
       console.warn("Meet invite error:", error.message);
+      if (error.toUsername) {
+        setPendingMeetInvites((prev) =>
+          prev.filter(
+            (i) =>
+              i.toUsername?.toLowerCase() !== error.toUsername.toLowerCase(),
+          ),
+        );
+      }
     });
 
     setSocket(socketInstance);

@@ -1103,16 +1103,36 @@ io.on("connection", (socket) => {
     if (!targetEntry) {
       socket.emit("meet-invite-error", {
         message: "User is not currently online",
+        toUsername,
       });
       return;
     }
     const [targetSocketId] = targetEntry;
     const inviteId = generateId();
     const senderData = registeredUsers.get(socket.id);
+
+    // Auto-expire the invite after 30 seconds if not responded to
+    const expireTimeout = setTimeout(() => {
+      if (meetDirectInvites.has(inviteId)) {
+        meetDirectInvites.delete(inviteId);
+        io.to(socket.id).emit("meet-invite-declined", {
+          byUsername: toUsername,
+          timedOut: true,
+        });
+        io.to(targetSocketId).emit("meet-invite-expired", { inviteId });
+        console.log(
+          `Meet invite ${inviteId} expired (no response from ${toUsername})`,
+        );
+      }
+    }, 30000);
+
     meetDirectInvites.set(inviteId, {
       fromSocketId: socket.id,
+      toSocketId: targetSocketId,
+      toUsername,
       fromName: senderData?.username || "Unknown",
       fromSign: senderData?.zodiacChart?.sun || null,
+      expireTimeout,
     });
     io.to(targetSocketId).emit("meet-direct-invite-received", {
       inviteId,
@@ -1127,6 +1147,7 @@ io.on("connection", (socket) => {
   socket.on("meet-direct-response", ({ inviteId, accepted }) => {
     const invite = meetDirectInvites.get(inviteId);
     if (!invite) return;
+    clearTimeout(invite.expireTimeout);
     meetDirectInvites.delete(inviteId);
 
     if (!accepted) {
@@ -1186,7 +1207,15 @@ io.on("connection", (socket) => {
     }
     for (const [inviteId, invite] of meetDirectInvites.entries()) {
       if (invite.fromSocketId === socket.id) {
+        clearTimeout(invite.expireTimeout);
         meetDirectInvites.delete(inviteId);
+      } else if (invite.toSocketId === socket.id) {
+        // Receiver disconnected – notify the sender so they don't stay stuck
+        clearTimeout(invite.expireTimeout);
+        meetDirectInvites.delete(inviteId);
+        io.to(invite.fromSocketId).emit("meet-invite-declined", {
+          byUsername: invite.toUsername,
+        });
       }
     }
 
