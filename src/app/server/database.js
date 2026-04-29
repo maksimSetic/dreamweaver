@@ -399,12 +399,18 @@ class DatabaseManager {
               [existingChat.chat_id],
               (updateErr) => {
                 if (updateErr) {
-                  reject(new Error("Failed to restore chat: " + updateErr.message));
+                  reject(
+                    new Error("Failed to restore chat: " + updateErr.message),
+                  );
                 } else {
                   resolve({
                     ...existingChat,
-                    deleted_by_user1: isUser1 ? 0 : existingChat.deleted_by_user1,
-                    deleted_by_user2: !isUser1 ? 0 : existingChat.deleted_by_user2,
+                    deleted_by_user1: isUser1
+                      ? 0
+                      : existingChat.deleted_by_user1,
+                    deleted_by_user2: !isUser1
+                      ? 0
+                      : existingChat.deleted_by_user2,
                   });
                 }
               },
