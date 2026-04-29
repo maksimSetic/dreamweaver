@@ -48,8 +48,14 @@ export default function Meet({ user, onLogin }) {
   const isInitiatorRef = useRef(false);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
+  const phaseRef = useRef("idle");
 
   const mySun = user?.zodiacChart?.sun;
+
+  // Keep a ref so reconnect handlers can read the current phase without stale closures
+  useEffect(() => {
+    phaseRef.current = phase;
+  }, [phase]);
 
   const stopLocalStream = useCallback(() => {
     if (localStreamRef.current) {
@@ -228,6 +234,22 @@ export default function Meet({ user, onLogin }) {
     socket.on("meet-partner-left", onPartnerLeft);
     socket.on("meet-message", onMessage);
 
+    // Re-join queue automatically if the socket reconnects while waiting
+    const onReconnect = () => {
+      if (phaseRef.current === "queuing" && user) {
+        socket.emit("meet-join-queue", {
+          name: user.username,
+          sign: user.zodiacChart?.sun || null,
+        });
+      } else if (phaseRef.current === "connected") {
+        // Partner is gone after reconnect – go back to ended screen
+        closePeerConnection();
+        matchIdRef.current = null;
+        setPhase("ended");
+      }
+    };
+    socket.on("connect", onReconnect);
+
     return () => {
       socket.off("meet-matched", onMatched);
       socket.off("meet-webrtc-offer", onOffer);
@@ -235,8 +257,9 @@ export default function Meet({ user, onLogin }) {
       socket.off("meet-webrtc-ice-candidate", onIceCandidate);
       socket.off("meet-partner-left", onPartnerLeft);
       socket.off("meet-message", onMessage);
+      socket.off("connect", onReconnect);
     };
-  }, [socket, createPeerConnection, closePeerConnection]);
+  }, [socket, user, createPeerConnection, closePeerConnection]);
 
   // Handle direct meet session (invite accepted by the other party)
   useEffect(() => {
