@@ -677,6 +677,7 @@ export const SocketProvider = ({ children, onMatchFound, user }) => {
       console.log("SocketContext cleanup - disconnecting socket");
       socketInstance.disconnect();
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Remove onMatchFound dependency to prevent socket recreation
 
   const joinQueue = (userData) => {

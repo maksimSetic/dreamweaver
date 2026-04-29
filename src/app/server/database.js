@@ -767,7 +767,7 @@ class DatabaseManager {
               this.db.run(
                 `INSERT OR IGNORE INTO dating_matches (user1_id, user2_id, user1_username, user2_username) VALUES (?, ?, ?, ?)`,
                 [u1, u2, u1Data.username, u2Data.username],
-                (_err) => {
+                () => {
                   resolve({
                     isMatch: true,
                     matchData: {
